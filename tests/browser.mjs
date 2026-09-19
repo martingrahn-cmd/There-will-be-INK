@@ -76,11 +76,17 @@ for (let wave = 1; wave <= 5; wave++) {
     g.wave.elapsed = g.wave.duration;
     g.wave.spawnTimer = 999;
   });
-  if (wave < 5)
+  if (wave < 5) {
+    await page.locator("[data-upgrade]").first().click();
+    assert.equal(
+      await page.evaluate(() => window.__doodle.game.state),
+      "building",
+    );
     await page
       .getByRole("button", { name: `START WAVE ${wave + 1} / 5` })
       .click();
-  else await page.getByRole("heading", { name: "The page is safe." }).waitFor();
+  } else
+    await page.getByRole("heading", { name: "The page is safe." }).waitFor();
 }
 await page.getByRole("button", { name: "ONE MORE PAGE" }).click();
 assert.equal(

@@ -382,6 +382,33 @@ test("free placement validates bounds, base clearance, overlap and budget", () =
   d.next(g);
   assert.equal(d.place(g, "mortar", 200, -100), false);
 });
+test("defense spawns shootable powerups and freezes pickups and buffs while building", () => {
+  const g = defenseGame();
+  g.defense.next(g);
+  g.wave.spawnTimer = 1000;
+  for (let i = 0; i < 240; i++) g.update(1 / 60);
+  assert.equal(g.powerups.items.length, 1);
+  const pickup = g.powerups.items[0];
+  const life = pickup.life;
+  g.defense.open(g);
+  g.update(0.03);
+  assert.equal(pickup.life, life);
+  g.defense.close(g);
+  g.weapons.bullet({
+    x: pickup.x - 10,
+    y: pickup.y,
+    vx: 600,
+    vy: 0,
+    damage: 1,
+  });
+  g.update(1 / 60);
+  assert.ok(g.buffs[pickup.type] > 0);
+  assert.equal(g.powerups.items.length, 0);
+  const duration = g.buffs[pickup.type];
+  g.defense.open(g);
+  g.update(0.03);
+  assert.equal(g.buffs[pickup.type], duration);
+});
 test("defense retains skill rewards and omnidirectional movement", () => {
   const g = defenseGame();
   g.defense.next(g);
@@ -429,7 +456,16 @@ test("five defense waves end in victory and restart clears placed towers", () =>
     g.enemies.items = [];
     g.wave.elapsed = g.wave.duration;
     g.update(0.03);
-    assert.equal(g.state, w === 5 ? "victory" : "building");
+    assert.equal(g.state, w === 5 ? "victory" : "upgrade");
+    if (w < 5) {
+      assert.equal(g.choices.length, 3);
+      assert.equal(g.defense.next(g), false);
+      const choice = g.choices[0].id;
+      assert.equal(g.choose(choice), true);
+      assert.equal(g.state, "building");
+      assert.equal(g.wave.number, w);
+      assert.equal(g.choose(choice), false);
+    }
   }
   g.start();
   assert.equal(g.defense.slots.length, 0);

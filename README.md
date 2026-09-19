@@ -12,7 +12,8 @@ Webbgränssnittet startar nu tower-defense-varianten. Fiender kommer från alla 
 - Alla kills ger +3 energi, även hjälptornens. Egna skicklighetsträffar ger extra: +15 för att stoppa en laddare under uppladdningen, +20 för en skytt före första skottet och +10 per fiende dödad av en spelarutlöst bläckexplosion. Varje avklarad våg ger +40 energi och +10 hälsa.
 - Fokusbyten autopausar inte som standard. Inställningen AUTO-PAUSE ON FOCUS LOSS finns i pausmenyn och sparas lokalt. Esc pausar alltid manuellt.
 - Behåll mus/LMB för huvudkanonen, RMB för granatkastaren och Space för chockvågen.
-- Slumpade vapenval och tillfälliga pickups är avstängda i detta experiment, så byggandet står i fokus. Den tidigare survival-logiken finns kvar i koden och testas separat.
+- Skjut powerups på banan för tillfällig hjälp, exempelvis Wingman, målsökande raketer, sköld eller Quad Damage. Första droppen kommer efter 2–4 sekunders strid; powerups och deras effekter pausas i byggläget.
+- Efter våg 1–4 väljer du en av tre permanenta uppgraderingar till huvudkanonen. Första valet är trippelpipa, explosiva skott eller studsande kulor. Sedan kan du bygga vidare och själv starta nästa våg. Uppgraderingarna gäller resten av omgången. Den tidigare survival-logiken finns kvar i koden och testas separat.
 
 Starta på porten som används i denna session: `npm run dev -- --port 5174`. Browser-testet använder 5174 som standard; ange `BASE_URL` för en annan adress.
 

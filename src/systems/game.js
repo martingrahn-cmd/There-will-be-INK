@@ -727,14 +727,22 @@ export class CombatSystem {
     if (!this.upgrades.take(id, this.stats)) return false;
     this.health = Math.min(
       this.stats.maxHealth,
-      this.health + (id === "repair" ? 40 : id === "cooling" ? 15 : 0) + 10,
+      this.health +
+        (id === "repair" ? 40 : id === "cooling" ? 15 : 0) +
+        (this.defense ? 0 : 10),
     );
     this.weapons.bullets = [];
     this.enemyBullets = [];
     this.weapons.shells = [];
-    this.state = "playing";
-    this.wave.next();
-    this.emit("wave", { number: this.wave.number });
+    this.choices = [];
+    if (this.defense) {
+      this.state = "ready";
+      this.defense.open(this);
+    } else {
+      this.state = "playing";
+      this.wave.next();
+      this.emit("wave", { number: this.wave.number });
+    }
     if (!before && this.upgrades.evolved)
       this.emit("evolution", { name: "HELLSTORM" });
     return true;
@@ -768,7 +776,7 @@ export class CombatSystem {
         );
       else this.pendingBlasts.push(blast);
     }
-    if (!this.defense) this.powerups.update(dt, this);
+    this.powerups.update(dt, this);
     for (const b of this.enemyBullets) {
       b.life -= dt;
       if (this.buffs.freeze <= 0) {
@@ -795,8 +803,8 @@ export class CombatSystem {
           this.state = "victory";
           this.emit("victory");
         } else {
-          this.state = "ready";
-          this.defense.open(this);
+          this.state = "upgrade";
+          this.choices = this.upgrades.choices(this.wave.number === 1);
           this.emit("waveComplete");
         }
         return;
