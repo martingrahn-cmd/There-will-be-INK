@@ -1,0 +1,1507 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap");
+:root {
+  font-family: "DM Sans", sans-serif;
+  color: #263f50;
+  background: #eae7da;
+  font-synthesis: none;
+  font-weight: 400;
+  --ink: #263f50;
+  --paper: #f0eddf;
+  --muted: #818578;
+  --green: #718c75;
+  --orange: #b95538;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  color: var(--ink);
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #b85537;
+  outline-offset: 5px;
+}
+button {
+  border: 0;
+}
+button:disabled {
+  cursor: default;
+}
+button:hover {
+  filter: brightness(0.96);
+}
+.hidden {
+  display: none !important;
+}
+.notebook {
+  position: relative;
+  min-height: 760px;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(#678c9211 1px, transparent 1px),
+    linear-gradient(90deg, #678c9211 1px, transparent 1px);
+  background-size: 25px 25px;
+  box-shadow: inset 0 0 140px #b2a98322;
+}
+.notebook:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 66px;
+  width: 1px;
+  background: #c8776857;
+  box-shadow: 4px 0 #c8776829;
+  z-index: 1;
+  pointer-events: none;
+}
+.notebook:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23686450' filter='url(%23n)' opacity='.28' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+  z-index: 20;
+}
+.binding {
+  position: absolute;
+  left: 24px;
+  top: 120px;
+  bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 2;
+}
+.binding i {
+  width: 15px;
+  height: 15px;
+  background: #c0bdaf;
+  border-radius: 50%;
+  box-shadow:
+    inset 1px 2px 4px #726e5e55,
+    1px 1px #fff8;
+}
+.topbar {
+  height: 112px;
+  margin-left: 98px;
+  margin-right: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #34495728;
+  position: relative;
+  z-index: 4;
+}
+.brand {
+  color: var(--ink);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font:
+    800 23px/0.84 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: 0.3px;
+}
+.brand-mark {
+  font-family: Georgia, serif;
+  font-size: 51px;
+  display: inline-block;
+  transform: rotate(-13deg);
+}
+.edition {
+  display: block;
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1.3px;
+  margin-top: 10px;
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.version {
+  font:
+    10px "DM Mono",
+    monospace;
+  color: #7e8175;
+  letter-spacing: 1.4px;
+}
+.icon-button {
+  border: 1px solid #263f5040;
+  background: transparent;
+  width: 33px;
+  height: 33px;
+  font-size: 20px;
+  border-radius: 50%;
+}
+#arena {
+  position: absolute;
+  left: 70px;
+  right: 0;
+  top: 117px;
+  bottom: 115px;
+  opacity: 0;
+  touch-action: none;
+}
+#arena.active {
+  opacity: 1;
+  cursor: none;
+}
+.arena-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.menu {
+  position: absolute;
+  top: 155px;
+  left: 12%;
+  right: 7%;
+  bottom: 135px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  column-gap: 30px;
+}
+.eyebrow {
+  font:
+    10px "DM Mono",
+    monospace;
+  letter-spacing: 1.6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow > span {
+  width: 6px;
+  height: 6px;
+  background: var(--orange);
+  border-radius: 50%;
+}
+h1 {
+  font:
+    900 clamp(68px, 7.4vw, 112px)/0.88 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: -1.4px;
+  margin: 27px 0 22px;
+}
+.ink-word {
+  position: relative;
+  color: var(--green);
+  display: inline-block;
+  transform: rotate(-3deg);
+}
+.ink-word svg {
+  position: absolute;
+  left: -5%;
+  width: 115%;
+  bottom: -12px;
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 3;
+}
+.period {
+  color: var(--orange);
+}
+.intro {
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 500;
+  margin: 25px 0 13px;
+}
+.description {
+  color: #757e74;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0 0 28px;
+}
+.primary {
+  background: var(--ink);
+  color: #f3f0df;
+  padding: 20px 25px;
+  min-width: 270px;
+  font:
+    500 12px "DM Mono",
+    monospace;
+  letter-spacing: 1.1px;
+  box-shadow: 4px 4px 0 #aab19e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+  transform: rotate(-0.6deg);
+}
+.primary:hover {
+  transform: translate(-1px, -2px) rotate(-0.6deg);
+  box-shadow: 6px 7px 0 #aab19e;
+}
+.primary span {
+  font-size: 20px;
+  line-height: 15px;
+}
+.start-note {
+  font:
+    italic 12px Georgia,
+    serif;
+  color: #868879;
+  margin-top: 16px;
+}
+.menu-drawing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding-bottom: 25px;
+}
+.hero-art {
+  width: 100%;
+  max-height: 440px;
+  overflow: visible;
+}
+.drawing-label {
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1.6px;
+  color: #7d8274;
+  transform: rotate(-2deg);
+}
+.field-notes {
+  grid-column: 1/-1;
+  margin-top: 35px;
+  padding-top: 22px;
+  border-top: 1px solid #34495728;
+}
+.field-notes > .eyebrow {
+  color: #858776;
+  font-size: 9px;
+}
+.note-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 28px;
+  padding-top: 17px;
+}
+.note-grid > div {
+  position: relative;
+  padding-left: 34px;
+}
+.note-number {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  font:
+    italic 20px Georgia,
+    serif;
+  color: #8b9b85;
+}
+.note-grid h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.note-grid p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #7e8479;
+  margin: 0;
+}
+.bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 98px;
+  right: 45px;
+  height: 99px;
+  border-top: 1px solid #34495728;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 4;
+}
+.controls {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.controls > span {
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 0.7px;
+  color: #778076;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+kbd {
+  font:
+    9px "DM Mono",
+    monospace;
+  border: 1px solid #90998c65;
+  padding: 5px 6px;
+  border-radius: 3px;
+  background: #f8f5e766;
+  box-shadow: 0 2px #8e958626;
+  white-space: nowrap;
+}
+.footer-note {
+  font:
+    italic 13px Georgia,
+    serif;
+  color: #7b8576;
+  white-space: nowrap;
+}
+.footer-note > span {
+  font-size: 25px;
+  padding-left: 9px;
+}
+.run-hud {
+  display: flex;
+  gap: 50px;
+  align-items: center;
+  margin: 0 30px;
+  flex: 1;
+  justify-content: center;
+}
+.hud-label {
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1.2px;
+  color: #7c8376;
+  display: block;
+  margin-bottom: 9px;
+}
+.health-block {
+  width: 200px;
+}
+.health-block .hud-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 8px;
+}
+.hud-label strong {
+  color: var(--ink);
+  letter-spacing: 0;
+}
+.health-track {
+  height: 9px;
+  background: #d6d8c8;
+  transform: skew(-12deg);
+  padding: 1px;
+}
+.health-track > div {
+  height: 100%;
+  background: #728d76;
+  transition: width 0.15s;
+}
+.health-track > div.critical {
+  background: #b84f3e;
+}
+.wave-block > strong,
+.score-block > strong {
+  font:
+    700 30px/0.9 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: 1px;
+}
+.wave-block small {
+  font:
+    8px "DM Mono",
+    monospace;
+  color: #7c8376;
+  letter-spacing: 0.5px;
+}
+.wave-progress {
+  position: absolute;
+  top: 111px;
+  left: 98px;
+  right: 45px;
+  height: 2px;
+}
+#wave-progress-fill {
+  height: 100%;
+  background: #819776;
+  transition: width 0.1s;
+}
+.arena-heading {
+  position: absolute;
+  top: 138px;
+  left: 104px;
+  right: 47px;
+  display: flex;
+  justify-content: space-between;
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1.5px;
+  color: #7e8678;
+  pointer-events: none;
+}
+.wave-countdown {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  color: var(--ink);
+  padding: 3px 9px 5px;
+  background: #f0eddfd9;
+  border-bottom: 2px solid #819776;
+}
+.wave-countdown strong {
+  font:
+    700 34px/1 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+.wave-countdown span {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.wave-countdown.urgent {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+#combo {
+  position: absolute;
+  right: 49px;
+  top: 199px;
+  text-align: right;
+  pointer-events: none;
+}
+#combo strong {
+  font:
+    800 48px "Barlow Condensed",
+    Impact,
+    sans-serif;
+  display: block;
+}
+#combo > span {
+  font:
+    8px "DM Mono",
+    monospace;
+  letter-spacing: 1px;
+  color: #798273;
+}
+#combo > div {
+  height: 2px;
+  background: #91978125;
+  margin-top: 8px;
+}
+#combo i {
+  display: block;
+  height: 100%;
+  background: #879879;
+}
+.hot strong {
+  color: var(--orange);
+}
+#buffs {
+  position: absolute;
+  left: 103px;
+  top: 176px;
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+  font:
+    10px "DM Mono",
+    monospace;
+}
+#buffs span {
+  background: #e6dfad;
+  padding: 8px 12px;
+  transform: rotate(-2deg);
+}
+#buffs strong {
+  margin-left: 15px;
+}
+.paper-note {
+  position: absolute;
+  left: 110px;
+  bottom: 152px;
+  font:
+    italic 13px/1.5 Georgia,
+    serif;
+  transform: rotate(-7deg);
+  color: #8a91816b;
+  pointer-events: none;
+}
+.paper-note > span {
+  font-size: 32px;
+  position: absolute;
+  top: -15px;
+  right: -35px;
+}
+.arena-corner {
+  position: absolute;
+  right: 49px;
+  bottom: 137px;
+  font:
+    8px "DM Mono",
+    monospace;
+  letter-spacing: 1px;
+  color: #939785;
+  pointer-events: none;
+}
+#announcement {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, 8px) rotate(-2deg);
+  opacity: 0;
+  text-align: center;
+  pointer-events: none;
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
+  white-space: nowrap;
+}
+#announcement.visible {
+  opacity: 1;
+  transform: translate(-50%, 0) rotate(-2deg);
+}
+#announcement strong {
+  font:
+    800 48px "Barlow Condensed",
+    Impact,
+    sans-serif;
+  display: block;
+  text-shadow: 2px 2px var(--paper);
+}
+#announcement span {
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1.5px;
+  background: var(--paper);
+  padding: 4px 8px;
+}
+#damage-vignette {
+  position: absolute;
+  inset: 112px 0 100px 70px;
+  box-shadow: inset 0 0 100px #b13828;
+  pointer-events: none;
+  opacity: 0;
+}
+.loadout {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+.weapon-slot {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  width: 285px;
+  min-width: 220px;
+}
+.weapon-icon {
+  font-size: 48px;
+  transform: rotate(-15deg);
+}
+.weapon-slot .hud-label {
+  font-size: 8px;
+  margin-bottom: 5px;
+}
+.weapon-slot strong {
+  display: block;
+  font:
+    700 19px "Barlow Condensed",
+    Impact,
+    sans-serif;
+  letter-spacing: 1px;
+}
+.weapon-slot div > span:last-child {
+  display: block;
+  font:
+    7px "DM Mono",
+    monospace;
+  letter-spacing: 0.4px;
+  color: #7e8676;
+  max-width: 230px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-top: 4px;
+}
+.ability {
+  position: relative;
+  border: 1px solid #74847555;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #efeddf;
+  padding: 11px 14px;
+  min-width: 170px;
+  text-align: left;
+}
+.ability:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: var(--charge, 100%);
+  height: 2px;
+  background: #809778;
+}
+.ability strong {
+  display: block;
+  font:
+    600 12px "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 1px;
+}
+.ability small {
+  display: block;
+  font:
+    8px "DM Mono",
+    monospace;
+  color: #6c886d;
+  margin-top: 3px;
+}
+.ability > span {
+  font-size: 25px;
+  margin-left: auto;
+}
+.charging {
+  opacity: 0.65;
+}
+.loadout-hint {
+  margin-left: auto;
+  font:
+    italic 13px/1.5 Georgia,
+    serif;
+  color: #71816d;
+}
+.loadout-hint > span {
+  font-size: 11px;
+  color: #8d9385;
+}
+.modal {
+  position: absolute;
+  inset: 113px 0 100px 70px;
+  z-index: 8;
+  background: #eeebddde;
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 45px;
+}
+.modal h2 {
+  font:
+    800 clamp(40px, 4.5vw, 66px)/1 "Barlow Condensed",
+    Impact,
+    sans-serif;
+  margin: 20px 0 12px;
+  letter-spacing: -0.5px;
+}
+.modal h2 em {
+  font-style: normal;
+  color: var(--green);
+}
+.modal p {
+  color: #778071;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.upgrade-panel {
+  width: 100%;
+  max-width: 1020px;
+}
+.upgrade-panel > .eyebrow,
+.upgrade-panel > h2,
+.upgrade-panel > p {
+  text-align: center;
+  justify-content: center;
+}
+.upgrade-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 35px;
+}
+.upgrade-card {
+  border: 1px solid #66755a60;
+  background: #f7f3e7;
+  text-align: left;
+  padding: 21px;
+  box-shadow: 4px 5px 0 #87927420;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.upgrade-card:nth-child(2) {
+  transform: rotate(1deg);
+}
+.upgrade-card:hover {
+  transform: translateY(-7px) rotate(-1deg);
+  box-shadow: 5px 10px #84937140;
+  border-color: #738b68;
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font:
+    8px "DM Mono",
+    monospace;
+  letter-spacing: 1px;
+  color: #7b8570;
+}
+.upgrade-icon {
+  font:
+    52px Georgia,
+    serif;
+  color: #738d72;
+  margin: 15px 0 10px;
+}
+.upgrade-card h3 {
+  font:
+    700 29px "Barlow Condensed",
+    Impact,
+    sans-serif;
+  margin: 0 0 5px;
+  text-transform: uppercase;
+}
+.upgrade-card em {
+  font:
+    italic 13px Georgia,
+    serif;
+  color: #78856e;
+}
+.upgrade-card p {
+  font-size: 12px;
+  min-height: 58px;
+  margin: 18px 0;
+}
+.card-bottom {
+  border-top: 1px solid #7e886b44;
+  padding-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  font:
+    8px "DM Mono",
+    monospace;
+  color: #929783;
+  letter-spacing: 0.5px;
+}
+.card-bottom > span {
+  color: var(--ink);
+}
+.upgrade-foot {
+  font:
+    8px "DM Mono",
+    monospace;
+  color: #848a78;
+  display: flex;
+  justify-content: space-between;
+  letter-spacing: 1px;
+  margin-top: 25px;
+}
+.pause-panel,
+.end-panel {
+  text-align: center;
+  max-width: 720px;
+}
+.pause-panel .eyebrow,
+.end-panel .eyebrow {
+  justify-content: center;
+}
+.pause-panel .primary,
+.end-panel .primary {
+  margin: 25px auto 0;
+}
+.secondary {
+  display: block;
+  padding: 14px 24px;
+  border: 1px solid #34495745;
+  background: transparent;
+  min-width: 270px;
+  margin: 20px auto 0;
+  font:
+    10px "DM Mono",
+    monospace;
+}
+.text-button {
+  display: block;
+  margin: 15px auto;
+  background: none;
+  font:
+    9px "DM Mono",
+    monospace;
+  color: #84907c;
+}
+.pause-controls {
+  font:
+    9px/2.3 "DM Mono",
+    monospace;
+  color: #828b79;
+  margin-top: 25px;
+}
+.result-score {
+  font:
+    800 66px "Barlow Condensed",
+    Impact,
+    sans-serif;
+  color: #738a6e;
+  margin-top: 20px;
+}
+.result-score > span {
+  display: block;
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 2px;
+  margin-top: 1px;
+}
+.run-results {
+  display: flex;
+  gap: 35px;
+  margin: 25px 0;
+}
+.run-results strong {
+  display: block;
+  font:
+    700 28px "Barlow Condensed",
+    sans-serif;
+}
+.run-results span,
+.best-score {
+  font:
+    8px "DM Mono",
+    monospace;
+  color: #838c79;
+  letter-spacing: 0.8px;
+}
+.best-score {
+  margin-top: 22px;
+}
+.error-card {
+  grid-column: 1/-1;
+}
+.in-game .version {
+  display: none;
+}
+@media (min-height: 950px) {
+  .menu {
+    top: 19%;
+    bottom: 16%;
+  }
+  .field-notes {
+    margin-top: 50px;
+  }
+}
+@media (max-height: 820px) and (min-width: 1000px) {
+  .notebook {
+    min-height: 680px;
+  }
+  .menu {
+    top: 140px;
+    bottom: 118px;
+  }
+  .menu h1 {
+    font-size: 82px;
+    margin: 21px 0 16px;
+  }
+  .intro {
+    font-size: 17px;
+    margin-top: 20px;
+  }
+  .description {
+    margin-bottom: 20px;
+  }
+  .primary {
+    padding: 17px 23px;
+  }
+  .field-notes {
+    margin-top: 23px;
+    padding-top: 17px;
+  }
+  .hero-art {
+    max-height: 350px;
+  }
+  .note-grid {
+    padding-top: 13px;
+  }
+  .menu-drawing {
+    padding-bottom: 10px;
+  }
+}
+@media (max-width: 1100px) {
+  .run-hud {
+    gap: 24px;
+    margin: 0 20px;
+  }
+  .health-block {
+    width: 150px;
+  }
+  .topbar {
+    margin-right: 25px;
+  }
+  .controls {
+    gap: 13px;
+  }
+  .footer-note {
+    display: none;
+  }
+  .menu {
+    left: 12%;
+    right: 5%;
+  }
+  .eyebrow {
+    font-size: 8px;
+  }
+  .loadout-hint {
+    display: none;
+  }
+  .weapon-slot {
+    flex: 1;
+  }
+  .bottom-bar {
+    right: 25px;
+  }
+  .upgrade-card {
+    padding: 16px;
+  }
+  .upgrade-card h3 {
+    font-size: 24px;
+  }
+  .modal {
+    padding: 25px;
+  }
+  .card-top {
+    font-size: 7px;
+  }
+  .card-bottom {
+    font-size: 7px;
+  }
+}
+@media (max-width: 760px) {
+  .notebook {
+    min-height: 980px;
+    height: auto;
+  }
+  .notebook.in-game {
+    height: 100dvh;
+    min-height: 620px;
+  }
+  .notebook:before {
+    left: 28px;
+  }
+  .binding {
+    left: 8px;
+    top: 110px;
+  }
+  .binding i {
+    width: 9px;
+    height: 9px;
+  }
+  .topbar {
+    margin-left: 46px;
+    margin-right: 20px;
+    height: 90px;
+  }
+  .brand {
+    font-size: 19px;
+  }
+  .brand-mark {
+    font-size: 40px;
+  }
+  .version {
+    font-size: 7px;
+  }
+  .menu {
+    top: 120px;
+    left: 55px;
+    right: 25px;
+    bottom: 140px;
+    display: block;
+  }
+  .menu-copy {
+    position: relative;
+    z-index: 1;
+  }
+  .menu h1 {
+    font-size: 75px;
+  }
+  .menu-drawing {
+    position: absolute;
+    right: -10px;
+    top: 110px;
+    width: 53%;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+  .drawing-label {
+    display: none;
+  }
+  .description {
+    font-size: 12px;
+  }
+  .field-notes {
+    margin-top: 45px;
+  }
+  .note-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .note-grid p br {
+    display: none;
+  }
+  .bottom-bar {
+    left: 46px;
+    right: 20px;
+    height: 115px;
+  }
+  .controls {
+    gap: 14px;
+  }
+  .top-actions {
+    gap: 8px;
+  }
+  .run-hud {
+    gap: 15px;
+    justify-content: flex-end;
+    margin-right: 12px;
+  }
+  .health-block {
+    width: 90px;
+  }
+  .health-block .hud-label {
+    font-size: 7px;
+    display: block;
+  }
+  .health-block .hud-label > span {
+    display: none;
+  }
+  .wave-block > strong,
+  .score-block > strong {
+    font-size: 23px;
+  }
+  .wave-block small,
+  .score-block .hud-label {
+    display: none;
+  }
+  .run-hud > .score-block {
+    display: none;
+  }
+  .wave-block > .hud-label {
+    font-size: 6px;
+    margin-bottom: 5px;
+  }
+  .in-game .edition {
+    font-size: 6px;
+  }
+  .in-game .brand-mark {
+    display: none;
+  }
+  .in-game .brand {
+    font-size: 16px;
+  }
+  .in-game .topbar {
+    height: 90px;
+  }
+  #arena {
+    left: 30px;
+    top: 96px;
+    bottom: 130px;
+  }
+  .arena-heading {
+    top: 110px;
+    left: 48px;
+    right: 20px;
+  }
+  .wave-progress {
+    top: 89px;
+    left: 46px;
+    right: 20px;
+  }
+  #combo {
+    right: 20px;
+    top: 145px;
+  }
+  #combo strong {
+    font-size: 32px;
+  }
+  #combo > span {
+    font-size: 6px;
+  }
+  .paper-note,
+  .arena-corner {
+    display: none;
+  }
+  .loadout {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .weapon-slot {
+    width: 100%;
+    min-width: 100%;
+    gap: 8px;
+  }
+  .weapon-icon {
+    font-size: 27px;
+  }
+  .weapon-slot strong {
+    font-size: 13px;
+  }
+  .weapon-slot .hud-label {
+    display: none;
+  }
+  .weapon-slot div > span:last-child {
+    font-size: 6px;
+  }
+  .ability {
+    min-width: 0;
+    flex: 1;
+    padding: 7px;
+    gap: 7px;
+  }
+  .ability > span {
+    font-size: 18px;
+  }
+  .ability kbd {
+    font-size: 7px;
+  }
+  .ability strong {
+    font-size: 10px;
+  }
+  #announcement strong {
+    font-size: 34px;
+  }
+  #announcement span {
+    font-size: 7px;
+  }
+  .modal {
+    inset: 91px 0 116px 30px;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-size: 36px;
+  }
+  .upgrade-cards {
+    gap: 10px;
+    grid-template-columns: 1fr;
+    margin-top: 17px;
+  }
+  .upgrade-card {
+    padding: 12px;
+    position: relative;
+    padding-left: 65px;
+  }
+  .upgrade-icon {
+    position: absolute;
+    left: 15px;
+    top: 10px;
+    font-size: 35px;
+  }
+  .upgrade-card h3 {
+    font-size: 22px;
+    margin: 2px 0;
+  }
+  .upgrade-card p {
+    min-height: 0;
+    font-size: 10px;
+    margin: 8px 0;
+  }
+  .upgrade-card em,
+  .card-bottom,
+  .upgrade-foot,
+  .upgrade-panel > p {
+    display: none;
+  }
+  .card-top kbd {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+  }
+  .card-top {
+    font-size: 6px;
+  }
+  .upgrade-panel {
+    margin: auto;
+  }
+  .run-results {
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .run-results span {
+    font-size: 6px;
+  }
+  .result-score {
+    font-size: 50px;
+  }
+  .end-panel > p {
+    font-size: 11px;
+  }
+  #buffs {
+    left: 46px;
+    top: 141px;
+    font-size: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+.defense-ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+.defense-ui button,
+.build-options {
+  pointer-events: auto;
+}
+.build-wallet {
+  position: absolute;
+  left: 103px;
+  top: 176px;
+  background: #eee9d8ed;
+  border-left: 3px solid #728d76;
+  padding: 12px 14px;
+  min-width: 175px;
+}
+.build-wallet > span {
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1px;
+  display: block;
+}
+.build-wallet > strong {
+  font:
+    700 34px "Barlow Condensed",
+    sans-serif;
+  margin-right: 18px;
+}
+.build-wallet button {
+  background: #263f50;
+  color: #f0eddf;
+  padding: 8px 10px;
+  font:
+    10px "DM Mono",
+    monospace;
+}
+.build-wallet small {
+  display: block;
+  font:
+    9px "DM Mono",
+    monospace;
+  max-width: 210px;
+  line-height: 1.6;
+  color: #6c806a;
+}
+.build-guide {
+  position: absolute;
+  top: 132px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  background: #f0eddfed;
+  padding: 12px 24px;
+}
+.build-guide > strong {
+  display: block;
+  font:
+    700 27px "Barlow Condensed",
+    sans-serif;
+}
+.build-guide > span {
+  font-size: 12px;
+  display: block;
+  margin: 6px 0 13px;
+}
+.build-guide .primary {
+  padding: 13px 18px;
+  min-width: 235px;
+}
+.build-options {
+  position: absolute;
+  bottom: 119px;
+  left: 50%;
+  transform: translateX(-45%);
+  width: min(760px, 78%);
+  display: flex;
+  gap: 10px;
+  background: #f0eddfed;
+  padding: 24px 12px 12px;
+  border: 1px solid #7f927580;
+  box-shadow: 3px 4px #6a7f6822;
+}
+.build-caption {
+  position: absolute;
+  top: 6px;
+  left: 14px;
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1px;
+}
+.tower-choice {
+  flex: 1;
+  text-align: left;
+  padding: 12px;
+  background: #e0e4cc;
+  border: 1px solid #728d7677;
+}
+.tower-choice strong {
+  display: block;
+  font:
+    700 19px "Barlow Condensed",
+    sans-serif;
+}
+.tower-choice span {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 7px 0;
+}
+.tower-choice small {
+  font:
+    10px "DM Mono",
+    monospace;
+}
+.tower-choice:disabled {
+  opacity: 0.45;
+}
+.build-pads {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.build-pads button {
+  pointer-events: auto;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 2px dashed #647d6b;
+  background: #f4efcfdd;
+  border-radius: 50%;
+  font:
+    bold 16px "DM Mono",
+    monospace;
+}
+.build-pads button.selected {
+  outline: 3px solid #b95538;
+  outline-offset: 4px;
+}
+.build-pads button.occupied {
+  background: #a2b8a7;
+}
+@media (max-width: 760px) {
+  .build-wallet {
+    left: 45px;
+    top: 145px;
+    min-width: 135px;
+    padding: 8px;
+  }
+  .build-guide {
+    top: 210px;
+    width: 80%;
+    left: 55%;
+  }
+  .build-options {
+    bottom: 120px;
+    width: 85%;
+    left: 50%;
+    gap: 5px;
+    padding: 25px 6px 6px;
+  }
+  .tower-choice {
+    padding: 6px;
+  }
+  .tower-choice strong {
+    font-size: 14px;
+  }
+  .tower-choice span {
+    font-size: 9px;
+  }
+  .build-wallet small {
+    font-size: 8px;
+  }
+}
+@media (min-width: 761px) {
+  .build-guide {
+    left: auto;
+    right: 35px;
+    top: 175px;
+    transform: none;
+    width: 260px;
+    padding: 15px;
+  }
+  .build-guide > strong {
+    font-size: 24px;
+  }
+  .build-guide .primary {
+    min-width: 220px;
+  }
+}
+.planning .loadout {
+  visibility: hidden;
+}
+.planning #combo {
+  visibility: hidden;
+}
+.build-options {
+  bottom: 12px;
+}
+@media (max-height: 850px) and (min-width: 761px) {
+  .tower-choice span {
+    font-size: 10px;
+    margin: 4px 0;
+  }
+  .tower-choice {
+    padding: 8px;
+  }
+  .build-guide {
+    width: 225px;
+    padding: 10px;
+    right: 20px;
+  }
+  .build-guide .primary {
+    min-width: 195px;
+    font-size: 10px;
+  }
+}
+.tower-choice.chosen {
+  outline: 2px solid #59876a;
+  outline-offset: 1px;
+  background: #cfdfc7;
+}
+.planning #arena {
+  cursor: crosshair;
+}
