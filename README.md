@@ -6,6 +6,8 @@ Tower-defense-experiment ovanpå en spelbar webbprototyp utifrån `doodle-defens
 
 Webbgränssnittet startar nu tower-defense-varianten. Fiender kommer från alla håll mot huvudkanonen. Hjälptorn placeras fritt på pappret. Överlev fem vågor med 35 sekunders spawning per våg, följt av utrensning. Efter femte vågen visas en segerbild.
 
+Vågorna ökar från cirka 118 till 234 fiender, med 20 % högre spawn-takt under de sista tio sekunderna. Fiendernas hälsa och fart ökar varje våg; elitfiender börjar dyka upp i våg 3 och blir vanligare mot finalen.
+
 - Starta med 100 byggenergi: välj en torntyp längst ner och klicka på pappret för att placera ditt första torn. Förhandsvisningen visar räckvidd; grönt betyder giltig plats.
 - Automatkanon, bromsfält och granatkastare kostar 100 energi. Uppgraderingar kostar 80 respektive 160; max nivå 3.
 - **B** öppnar byggläget och pausar striden. Välj torntyp och klicka för att bygga; klicka på ett befintligt torn för att uppgradera, sedan återuppta. Mellan vågor startar du nästa våg när du är redo.

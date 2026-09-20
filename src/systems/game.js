@@ -52,9 +52,13 @@ export class WaveSystem {
     this.elapsed += dt;
     this.spawnTimer -= dt;
     if (this.spawning && this.spawnTimer <= 0) {
-      this.spawnTimer =
-        1 / (1.8 + this.number * 0.55 + Math.min(this.elapsed, 40) * 0.022);
-      const batch = this.number >= 6 ? 2 : 1;
+      // Defense ends after five waves, so its pressure must ramp up earlier.
+      const spawnRate = game.defense
+        ? (2 + this.number * 0.8 + this.elapsed * 0.025) *
+          (this.elapsed >= this.duration - 10 ? 1.2 : 1)
+        : 1.8 + this.number * 0.55 + Math.min(this.elapsed, 40) * 0.022;
+      this.spawnTimer += 1 / spawnRate;
+      const batch = !game.defense && this.number >= 6 ? 2 : 1;
       for (let i = 0; i < batch; i++) {
         const r = game.rng();
         const shooterChance =
@@ -607,18 +611,28 @@ export class CombatSystem {
           this.bounds.x / Math.max(0.001, Math.abs(Math.cos(a))),
           this.bounds.y / Math.max(0.001, Math.abs(Math.sin(a))),
         ) + 25;
-    const elite = this.wave.number >= 4 && this.rng() < 0.08;
+    const eliteChance = this.defense
+      ? this.wave.number >= 3
+        ? Math.min(0.2, 0.06 + (this.wave.number - 3) * 0.05)
+        : 0
+      : this.wave.number >= 4
+        ? 0.08
+        : 0;
+    const elite = eliteChance > 0 && this.rng() < eliteChance;
+    const healthScale = this.defense
+      ? 1.1 + (this.wave.number - 1) * 0.24
+      : 1 + (this.wave.number - 1) * 0.12;
     this.enemies.items.push({
       ...base,
       id: ++this.enemies.nextId,
       type,
       x: Math.cos(a) * scale,
       y: Math.sin(a) * scale,
-      health:
-        base.health * (1 + (this.wave.number - 1) * 0.12) * (elite ? 2 : 1),
-      maxHealth:
-        base.health * (1 + (this.wave.number - 1) * 0.12) * (elite ? 2 : 1),
-      speed: base.speed * (1 + Math.min(0.5, this.wave.number * 0.018)),
+      health: base.health * healthScale * (elite ? 2 : 1),
+      maxHealth: base.health * healthScale * (elite ? 2 : 1),
+      speed:
+        base.speed *
+        (1 + Math.min(0.5, this.wave.number * (this.defense ? 0.03 : 0.018))),
       radius: base.radius * (elite ? 1.25 : 1),
       elite,
       age: 0,

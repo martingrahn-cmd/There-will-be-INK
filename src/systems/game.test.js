@@ -358,6 +358,64 @@ function defenseGame() {
   g.start();
   return g;
 }
+test("defense ramps enemy pressure across all five waves at different frame rates", () => {
+  const totals = [];
+  for (const fps of [30, 60, 144]) {
+    const counts = [];
+    for (let wave = 1; wave <= 5; wave++) {
+      const g = defenseGame();
+      g.defense.next(g);
+      g.wave.number = wave;
+      let count = 0;
+      let middle = 0;
+      let finale = 0;
+      g.spawnEnemy = () => {
+        count++;
+        if (g.wave.elapsed >= 15 && g.wave.elapsed < 25) middle++;
+        if (g.wave.elapsed >= 25) finale++;
+      };
+      while (g.wave.spawning) g.wave.update(1 / fps, g);
+      assert.ok(finale > middle * 1.15);
+      const finishedCount = count;
+      g.wave.update(1 / fps, g);
+      assert.equal(count, finishedCount);
+      counts.push(count);
+    }
+    assert.ok(counts[0] >= 115 && counts[0] <= 120);
+    assert.ok(counts[4] >= 230 && counts[4] <= 237);
+    for (let i = 1; i < counts.length; i++)
+      assert.ok(counts[i] > counts[i - 1] + 20);
+    totals.push(counts);
+  }
+  for (let wave = 0; wave < 5; wave++) {
+    const counts = totals.map((waves) => waves[wave]);
+    assert.ok(Math.max(...counts) - Math.min(...counts) <= 1);
+  }
+});
+test("defense enemies grow tougher and faster, with elites from wave three", () => {
+  const g = defenseGame();
+  g.defense.next(g);
+  g.rng = () => 0.04;
+  g.wave.number = 2;
+  g.spawnEnemy("brute");
+  const early = g.enemies.items.at(-1);
+  assert.equal(early.elite, false);
+  g.wave.number = 3;
+  g.spawnEnemy("brute");
+  assert.equal(g.enemies.items.at(-1).elite, true);
+  g.rng = () => 0.5;
+  g.wave.number = 5;
+  g.spawnEnemy("brute");
+  const late = g.enemies.items.at(-1);
+  assert.equal(late.elite, false);
+  assert.ok(late.health > early.health * 1.5);
+  assert.ok(late.speed > early.speed);
+  assert.equal(late.health, late.maxHealth);
+  g.rng = () => 0.15;
+  g.spawnEnemy("brute");
+  assert.equal(g.enemies.items.at(-1).elite, true);
+  assert.equal(g.enemies.items.at(-1).health, late.health * 2);
+});
 test("free placement validates bounds, base clearance, overlap and budget", () => {
   const g = defenseGame(),
     d = g.defense;
