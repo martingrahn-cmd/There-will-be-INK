@@ -476,6 +476,7 @@ export class GameRenderer {
   }
   render(g, dt) {
     this.effects.update(dt);
+    if (g.state !== "playing") this.effects.shake = 0;
     this.recoil = Math.max(0, this.recoil - dt * 45);
     g.bounds = { x: Math.max(220, this.worldWidth / 2 - 25), y: 345 };
     if (g.defense) g.defense.layout(g.bounds);

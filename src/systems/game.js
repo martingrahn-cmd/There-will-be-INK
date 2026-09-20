@@ -55,7 +55,8 @@ export class WaveSystem {
       // Defense ends after five waves, so its pressure must ramp up earlier.
       const spawnRate = game.defense
         ? (2 + this.number * 0.8 + this.elapsed * 0.025) *
-          (this.elapsed >= this.duration - 10 ? 1.2 : 1)
+          (1.15 + (this.number - 1) * 0.12) *
+          (this.elapsed >= this.duration - 10 ? 1.35 : 1)
         : 1.8 + this.number * 0.55 + Math.min(this.elapsed, 40) * 0.022;
       this.spawnTimer += 1 / spawnRate;
       const batch = !game.defense && this.number >= 6 ? 2 : 1;
@@ -558,6 +559,7 @@ export class CombatSystem {
     this.health = 100;
     this.state = "menu";
     this.time = 0;
+    this.clearTimer = 0;
     this.aim = { x: 200, y: 0 };
     this.events = [];
     this.enemies = new EnemySystem();
@@ -762,6 +764,19 @@ export class CombatSystem {
     return true;
   }
   update(dt, input = {}) {
+    if (this.state === "clearing") {
+      this.clearTimer = Math.max(0, this.clearTimer - Math.min(0.0334, dt));
+      if (this.clearTimer === 0) {
+        if (this.wave.number >= 5) {
+          this.state = "victory";
+          this.emit("victory");
+        } else {
+          this.state = "upgrade";
+          this.choices = this.upgrades.choices(this.wave.number === 1);
+        }
+      }
+      return;
+    }
     if (this.state !== "playing") return;
     dt = Math.min(0.0334, dt);
     this.time += dt;
@@ -813,14 +828,13 @@ export class CombatSystem {
         this.defense.reward(40, "WAVE CLEAR");
         this.health = Math.min(this.stats.maxHealth, this.health + 10);
         this.enemyBullets = [];
-        if (this.wave.number >= 5) {
-          this.state = "victory";
-          this.emit("victory");
-        } else {
-          this.state = "upgrade";
-          this.choices = this.upgrades.choices(this.wave.number === 1);
-          this.emit("waveComplete");
-        }
+        this.weapons.bullets = [];
+        this.weapons.shells = [];
+        this.defense.shells = [];
+        this.damageFlash = 0;
+        this.state = "clearing";
+        this.clearTimer = 2;
+        this.emit("waveComplete");
         return;
       }
       this.state = "upgrade";

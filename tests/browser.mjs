@@ -75,13 +75,42 @@ for (let wave = 1; wave <= 5; wave++) {
     g.pendingBlasts = [];
     g.wave.elapsed = g.wave.duration;
     g.wave.spawnTimer = 999;
+    window.__doodle.view.effects.shake = 18;
   });
+  await page.getByRole("heading", { name: "LEVEL CLEAR" }).waitFor();
+  assert.equal(await page.locator("[data-upgrade]").count(), 0);
+  if (wave === 1) {
+    await page.screenshot({ path: "artifacts/level-clear.png" });
+  }
   if (wave < 5) {
     await page.locator("[data-upgrade]").first().click();
     assert.equal(
       await page.evaluate(() => window.__doodle.game.state),
       "building",
     );
+    if (wave === 1) {
+      await page.getByRole("button", { name: /Ⅱ AUTO CANNON/ }).click();
+      await clickWorld(-270, 80);
+      assert.equal(
+        await page.evaluate(() => window.__doodle.game.defense.slots.length),
+        4,
+      );
+      const camera = await page.evaluate(() => {
+        const { game, view } = window.__doodle;
+        view.effects.shake = 18;
+        return Array.from({ length: 10 }, () => {
+          view.render(game, 1 / 60);
+          return [
+            view.camera.position.x,
+            view.camera.position.y,
+            view.effects.shake,
+          ];
+        });
+      });
+      assert.ok(
+        camera.every(([x, y, shake]) => x === 0 && y === 0 && shake === 0),
+      );
+    }
     await page
       .getByRole("button", { name: `START WAVE ${wave + 1} / 5` })
       .click();

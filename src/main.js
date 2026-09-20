@@ -93,8 +93,12 @@ function syncState() {
   const modal = $("#modal");
   modal.classList.toggle(
     "hidden",
-    !["paused", "upgrade", "gameover", "victory"].includes(s),
+    !["paused", "clearing", "upgrade", "gameover", "victory"].includes(s),
   );
+  if (s === "clearing") {
+    $("#announcement").classList.remove("visible");
+    modal.innerHTML = `<div class="level-clear-panel" role="status"><span class="eyebrow">WAVE ${String(game.wave.number).padStart(2, "0")} / 05</span><div class="level-clear-stamp">✓</div><h2 id="modal-title">LEVEL <em>CLEAR</em></h2><p>${game.wave.number === 5 ? "The last doodle falls. The page is safe." : "Take a breath. Your next upgrade is coming."}</p><div class="level-clear-reward">+40 BUILD ENERGY <span>+10 HULL REPAIR</span></div><div class="level-clear-progress"><i></i></div></div>`;
+  }
   if (s === "upgrade") {
     modal.innerHTML = `<div class="upgrade-panel"><span class="eyebrow">PAGE ${String(game.wave.number).padStart(2, "0")} / SURVIVED</span><h2 id="modal-title">A little more <em>unreasonable.</em></h2><p>Pick one permanent upgrade. Make the next wave regret it.</p><div class="upgrade-cards">${game.choices.map((u, i) => `<button class="upgrade-card" data-upgrade="${u.id}"><div class="card-top"><span>${u.tag}</span><kbd>${i + 1}</kbd></div><div class="upgrade-icon">${u.icon}</div><h3>${u.name}</h3><em>${u.title}</em><p>${u.description}</p><div class="card-bottom">${game.upgrades.owned[u.id] ? `LEVEL ${game.upgrades.owned[u.id] + 1}` : "NEW ADDITION"}<span>TAKE IT ↗</span></div></button>`).join("")}</div><div class="upgrade-foot">+10 HULL REPAIR BETWEEN WAVES<span>EXPERIMENT. THINGS GET INTERESTING.</span></div></div>`;
     modal.querySelectorAll("[data-upgrade]").forEach(
@@ -325,8 +329,7 @@ function frame(now) {
   game.events.length = 0;
   syncState();
   updateDefenseUI();
-  if (game.state !== "menu")
-    view.render(game, game.state !== "playing" ? 0 : dt);
+  if (game.state !== "menu") view.render(game, dt);
   audio.update(dt, game.enemies.items.length, game.state === "playing");
   announcementTimer -= dt;
   if (announcementTimer <= 0) $("#announcement").classList.remove("visible");

@@ -375,16 +375,16 @@ test("defense ramps enemy pressure across all five waves at different frame rate
         if (g.wave.elapsed >= 25) finale++;
       };
       while (g.wave.spawning) g.wave.update(1 / fps, g);
-      assert.ok(finale > middle * 1.15);
+      assert.ok(finale > middle * 1.3);
       const finishedCount = count;
       g.wave.update(1 / fps, g);
       assert.equal(count, finishedCount);
       counts.push(count);
     }
-    assert.ok(counts[0] >= 115 && counts[0] <= 120);
-    assert.ok(counts[4] >= 230 && counts[4] <= 237);
+    assert.ok(counts[0] >= 140 && counts[0] <= 145);
+    assert.ok(counts[4] >= 395 && counts[4] <= 401);
     for (let i = 1; i < counts.length; i++)
-      assert.ok(counts[i] > counts[i - 1] + 20);
+      assert.ok(counts[i] > counts[i - 1] + 45);
     totals.push(counts);
   }
   for (let wave = 0; wave < 5; wave++) {
@@ -514,6 +514,19 @@ test("five defense waves end in victory and restart clears placed towers", () =>
     g.enemies.items = [];
     g.wave.elapsed = g.wave.duration;
     g.update(0.03);
+    assert.equal(g.state, "clearing");
+    assert.equal(g.defense.next(g), false);
+    assert.equal(g.choose("double"), false);
+    const energy = g.defense.energy;
+    const time = g.time;
+    g.buffs.shield = 5;
+    for (let i = 0; i < 59; i++) g.update(1 / 60, { fire: true });
+    assert.equal(g.state, "clearing");
+    assert.equal(g.time, time);
+    assert.equal(g.buffs.shield, 5);
+    assert.equal(g.weapons.bullets.length, 0);
+    for (let i = 0; i < 62; i++) g.update(1 / 60);
+    assert.equal(g.defense.energy, energy);
     assert.equal(g.state, w === 5 ? "victory" : "upgrade");
     if (w < 5) {
       assert.equal(g.choices.length, 3);
@@ -528,4 +541,5 @@ test("five defense waves end in victory and restart clears placed towers", () =>
   g.start();
   assert.equal(g.defense.slots.length, 0);
   assert.equal(g.defense.energy, 100);
+  assert.equal(g.clearTimer, 0);
 });

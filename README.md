@@ -6,7 +6,7 @@ Tower-defense-experiment ovanpå en spelbar webbprototyp utifrån `doodle-defens
 
 Webbgränssnittet startar nu tower-defense-varianten. Fiender kommer från alla håll mot huvudkanonen. Hjälptorn placeras fritt på pappret. Överlev fem vågor med 35 sekunders spawning per våg, följt av utrensning. Efter femte vågen visas en segerbild.
 
-Vågorna ökar från cirka 118 till 234 fiender, med 20 % högre spawn-takt under de sista tio sekunderna. Fiendernas hälsa och fart ökar varje våg; elitfiender börjar dyka upp i våg 3 och blir vanligare mot finalen.
+Vågorna har cirka 142, 195, 256, 323 och 398 fiender för att möta spelarens permanenta uppgraderingar, med 35 % högre spawn-takt under de sista tio sekunderna. Fiendernas hälsa och fart ökar varje våg; elitfiender börjar dyka upp i våg 3 och blir vanligare mot finalen.
 
 - Starta med 100 byggenergi: välj en torntyp längst ner och klicka på pappret för att placera ditt första torn. Förhandsvisningen visar räckvidd; grönt betyder giltig plats.
 - Automatkanon, bromsfält och granatkastare kostar 100 energi. Uppgraderingar kostar 80 respektive 160; max nivå 3.
@@ -15,7 +15,7 @@ Vågorna ökar från cirka 118 till 234 fiender, med 20 % högre spawn-takt unde
 - Fokusbyten autopausar inte som standard. Inställningen AUTO-PAUSE ON FOCUS LOSS finns i pausmenyn och sparas lokalt. Esc pausar alltid manuellt.
 - Behåll mus/LMB för huvudkanonen, RMB för granatkastaren och Space för chockvågen.
 - Skjut powerups på banan för tillfällig hjälp, exempelvis Wingman, målsökande raketer, sköld eller Quad Damage. Första droppen kommer efter 2–4 sekunders strid; powerups och deras effekter pausas i byggläget.
-- Efter våg 1–4 väljer du en av tre permanenta uppgraderingar till huvudkanonen. Första valet är trippelpipa, explosiva skott eller studsande kulor. Sedan kan du bygga vidare och själv starta nästa våg. Uppgraderingarna gäller resten av omgången. Den tidigare survival-logiken finns kvar i koden och testas separat.
+- Efter varje våg visas en två sekunder lång ”Level clear”-animation med vågens belöning. Efter våg 1–4 väljer du sedan en av tre permanenta uppgraderingar till huvudkanonen. Första valet är trippelpipa, explosiva skott eller studsande kulor. Sedan kan du bygga vidare och själv starta nästa våg. Uppgraderingarna gäller resten av omgången. Efter våg 5 visas segerbilden. Kameraskakning stoppas i byggläget och övriga pauser, medan visuella effekter klingar av.
 
 Starta på porten som används i denna session: `npm run dev -- --port 5174`. Browser-testet använder 5174 som standard; ange `BASE_URL` för en annan adress.
 
