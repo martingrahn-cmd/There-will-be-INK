@@ -82,7 +82,7 @@ export const UPGRADES = [
     title: "Parting gifts.",
     name: "Death fragments",
     icon: "⁙",
-    description: "Destroyed enemies release four damaging fragments.",
+    description: "Your kills release four damaging fragments.",
     max: 1,
     apply: (s) => {
       s.shrapnel = true;
@@ -151,23 +151,56 @@ export const UPGRADES = [
   },
 ];
 export class UpgradeSystem {
-  constructor(rng = Math.random) {
+  constructor(rng = Math.random, mode = "survival") {
     this.rng = rng;
+    // Defense cards shape the current loadout; the workshop owns baseline stats.
+    this.catalog =
+      mode === "defense"
+        ? UPGRADES.filter(
+            (u) => !["damage", "repair", "cooling"].includes(u.id),
+          ).map((u) =>
+            u.id === "minigun"
+              ? {
+                  ...u,
+                  tag: "SPRAY FIRE",
+                  description:
+                    "50% faster main-gun fire, 15% less damage per bullet and a wider spread.",
+                  apply: (s) => {
+                    s.fireRate *= 1.5;
+                    s.damage *= 0.85;
+                    s.spread += 0.035;
+                  },
+                }
+              : u,
+          )
+        : UPGRADES;
+    if (mode === "defense")
+      this.catalog = this.catalog.map((u) => ({
+        ...u,
+        scope:
+          {
+            mortar: "YOUR MORTAR",
+            pulse: "YOUR SHOCKWAVE",
+            reach: "YOUR BLASTS",
+            shrapnel: "YOUR KILLS",
+          }[u.id] || "MAIN GUN",
+      }));
     this.owned = {};
   }
   choices(opening = false) {
     if (opening)
       return ["double", "explosive", "ricochet"].map((id) =>
-        UPGRADES.find((u) => u.id === id),
+        this.catalog.find((u) => u.id === id),
       );
-    return UPGRADES.filter((u) => (this.owned[u.id] || 0) < u.max)
+    return this.catalog
+      .filter((u) => (this.owned[u.id] || 0) < u.max)
       .map((u) => ({ u, n: this.rng() }))
       .sort((a, b) => a.n - b.n)
       .slice(0, 3)
       .map((x) => x.u);
   }
   take(id, stats) {
-    const u = UPGRADES.find((x) => x.id === id);
+    const u = this.catalog.find((x) => x.id === id);
     if (!u || (this.owned[id] || 0) >= u.max) return false;
     this.owned[id] = (this.owned[id] || 0) + 1;
     u.apply(stats);

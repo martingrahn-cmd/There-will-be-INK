@@ -22,6 +22,18 @@ export class EffectsSystem {
     }
   }
   event(e) {
+    if (e.type === "bossArrived" || e.type === "bossDefeated") {
+      this.shake = Math.max(this.shake, 9);
+      this.burst(e.x, e.y, 70, "#b84f3e", 220);
+      this.rings.push({
+        x: e.x,
+        y: e.y,
+        r: 150,
+        life: 0.7,
+        max: 0.7,
+        color: "#b84f3e",
+      });
+    }
     if (e.type === "supportShot") this.burst(e.x, e.y, 3, "#629e83", 80);
     if (e.type === "nova")
       this.rings.push({

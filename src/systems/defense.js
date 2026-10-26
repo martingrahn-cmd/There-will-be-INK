@@ -1,31 +1,49 @@
+export const ECONOMY = {
+  startingEnergy: 150,
+  killReward: 1,
+  killBudget: 80,
+  skillBudget: 20,
+  chargeReward: 4,
+  silenceReward: 5,
+  chainReward: 3,
+  waveReward: 120,
+  upgradeCosts: [120, 200],
+};
 export const TOWERS = {
   gun: {
     name: "AUTO CANNON",
+    role: "FOCUS FIRE",
     icon: "Ⅱ",
-    description: "Fast, focused fire. Covers the surrounding area.",
-    cost: 100,
+    description: "Steady single-target fire. Covers gaps near your base.",
+    cost: 120,
     range: 185,
   },
   slow: {
     name: "SLOW FIELD",
+    role: "CONTROL",
     icon: "◎",
-    description: "Slows enemies so you and other towers get more shots.",
-    cost: 100,
+    description:
+      "Buys time inside its radius. Deals no damage; pair it with a gun.",
+    cost: 140,
     range: 155,
   },
   mortar: {
     name: "MORTAR",
+    role: "CROWD CLEAR",
     icon: "✣",
-    description: "Heavy splash damage. Best against groups.",
-    cost: 100,
+    description:
+      "Targets the densest group in range. Slow shots, wide explosions.",
+    cost: 150,
     range: 245,
   },
 };
 export class DefenseSystem {
   constructor() {
-    this.energy = 100;
+    this.energy = ECONOMY.startingEnergy;
     this.earned = 0;
     this.skillEnergy = 0;
+    this.waveKillEnergy = 0;
+    this.waveSkillEnergy = 0;
     this.selected = -1;
     this.placing = "gun";
     this.preview = null;
@@ -74,6 +92,14 @@ export class DefenseSystem {
     return true;
   }
   reward(amount, reason, skill = false) {
+    if (skill) {
+      amount = Math.min(amount, ECONOMY.skillBudget - this.waveSkillEnergy);
+      this.waveSkillEnergy += amount;
+    } else if (reason === "KILL") {
+      amount = Math.min(amount, ECONOMY.killBudget - this.waveKillEnergy);
+      this.waveKillEnergy += amount;
+    }
+    if (amount <= 0) return;
     this.energy += amount;
     this.earned += amount;
     if (skill) {
@@ -83,7 +109,7 @@ export class DefenseSystem {
     }
   }
   cost(slot) {
-    return slot.type ? 80 * slot.level : 100;
+    return ECONOMY.upgradeCosts[slot.level - 1] ?? Infinity;
   }
   build(g, id, type) {
     const slot = this.slots[id];
@@ -121,6 +147,9 @@ export class DefenseSystem {
     g.enemyBullets = [];
     g.weapons.shells = [];
     this.shells = [];
+    this.waveKillEnergy = 0;
+    this.waveSkillEnergy = 0;
+    this.rewardTime = 0;
     g.wave.next();
     g.state = "playing";
     g.emit("wave", { number: g.wave.number });
@@ -142,10 +171,25 @@ export class DefenseSystem {
         continue;
       }
       slot.cooldown = Math.max(0, slot.cooldown - dt);
-      const target = targets.sort(
+      let target = targets.sort(
         (a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y),
       )[0];
       if (!target) continue;
+      if (slot.type === "mortar" && slot.cooldown <= 0) {
+        const radius = 85 + (slot.level - 1) * 10;
+        let bestCount = 0;
+        for (const candidate of targets) {
+          const count = targets.filter(
+            (e) =>
+              (e.x - candidate.x) ** 2 + (e.y - candidate.y) ** 2 <
+              (radius + e.radius) ** 2,
+          ).length;
+          if (count > bestCount) {
+            target = candidate;
+            bestCount = count;
+          }
+        }
+      }
       slot.angle = Math.atan2(target.y - slot.y, target.x - slot.x);
       if (slot.cooldown > 0) continue;
       if (slot.type === "gun") {

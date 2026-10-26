@@ -37,6 +37,12 @@ export class AudioSystem {
     };
   }
   play(event) {
+    if (event.type === "bossIncoming" || event.type === "bossRage") {
+      this.tone(90, 0.6, "sawtooth", 0.055, 45);
+      this.tone(180, 0.45, "triangle", 0.035, 65);
+    }
+    if (event.type === "bossDefeated")
+      this.tone(220, 0.7, "triangle", 0.06, 660);
     if (event.type === "supportShot")
       this.tone(260, 0.045, "triangle", 0.018, 110);
     if (event.type === "seekers") this.tone(340, 0.12, "triangle", 0.024, 100);

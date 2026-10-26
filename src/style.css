@@ -586,6 +586,13 @@ kbd {
   opacity: 1;
   transform: translate(-50%, 0) rotate(-2deg);
 }
+#announcement.boss-announcement {
+  top: auto;
+  bottom: 23%;
+}
+#announcement.boss-announcement strong {
+  color: #923d2f;
+}
 #announcement strong {
   font:
     800 48px "Barlow Condensed",
@@ -1579,5 +1586,282 @@ kbd {
   .level-clear-stamp,
   .level-clear-progress i {
     animation: none;
+  }
+}
+
+/* Boss dossier and the between-run workshop keep the paper-and-ink vocabulary. */
+.boss-hud {
+  position: absolute;
+  bottom: 116px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, 42%);
+  z-index: 4;
+  padding: 10px 16px;
+  background: #eee9d8ee;
+  border: 1px solid #b84f3e66;
+  border-top: 3px solid #b84f3e;
+  pointer-events: none;
+}
+.boss-hud > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font:
+    bold 12px "DM Mono",
+    monospace;
+  color: #923d2f;
+}
+.boss-health-track {
+  height: 7px;
+  background: #b84f3e25;
+  margin-top: 8px;
+}
+.boss-health-track i {
+  display: block;
+  height: 100%;
+  background: #b84f3e;
+}
+.boss-hud p {
+  margin: 7px 0 0;
+  font:
+    9px/1.5 "DM Mono",
+    monospace;
+  color: #923d2f;
+}
+.boss-hud.vulnerable {
+  border-color: #527f64;
+}
+.boss-hud.vulnerable p {
+  color: #527f64;
+}
+.workshop-modal {
+  overflow-y: auto;
+  align-items: safe center;
+}
+.workshop-panel {
+  width: min(100%, 960px);
+  padding: 12px 0;
+}
+.workshop-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+.workshop-heading .text-button {
+  margin: 0;
+  padding: 12px;
+  color: var(--ink);
+  border: 1px solid #263f5440;
+}
+.scrap-wallet {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0 20px;
+}
+.scrap-wallet > strong {
+  font:
+    800 52px/1 "Barlow Condensed",
+    sans-serif;
+  color: #b65c3e;
+}
+.scrap-wallet > span {
+  font:
+    11px/1.8 "DM Mono",
+    monospace;
+}
+.scrap-wallet small {
+  color: #778071;
+}
+.workshop-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.workshop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-height: 230px;
+  padding: 18px;
+  border: 1px solid #728d7680;
+  background: #f3efdf;
+  color: #263f54;
+  box-shadow: 4px 4px 0 #728d7622;
+}
+.workshop-card:not(:disabled):hover {
+  border-color: #b65c3e;
+  transform: translateY(-2px);
+}
+.workshop-card:disabled {
+  opacity: 0.58;
+  cursor: default;
+}
+.workshop-level {
+  font:
+    9px "DM Mono",
+    monospace;
+  letter-spacing: 1px;
+}
+.workshop-icon {
+  font-size: 35px;
+  color: #b65c3e;
+  margin-top: 14px;
+}
+.workshop-card h3 {
+  font:
+    700 25px "Barlow Condensed",
+    sans-serif;
+  margin: 8px 0 0;
+  text-transform: uppercase;
+}
+.workshop-card p {
+  margin: 9px 0 18px;
+  font-size: 12px;
+}
+.workshop-card > strong {
+  margin-top: auto;
+  font:
+    bold 10px/1.6 "DM Mono",
+    monospace;
+}
+.workshop-foot {
+  margin-top: 20px;
+}
+.workshop-message {
+  min-height: 22px;
+  font:
+    12px "DM Mono",
+    monospace;
+  color: #527f64;
+}
+.end-scrap {
+  margin-top: 20px;
+  font:
+    bold 11px/1.6 "DM Mono",
+    monospace;
+  color: #b65c3e;
+}
+.end-panel .result-score {
+  font-size: 48px;
+  margin-top: 12px;
+}
+.end-panel .secondary {
+  margin-top: 14px;
+}
+.end-panel .primary {
+  margin-top: 12px;
+}
+.menu-copy > .secondary {
+  margin: 15px 0 0;
+  min-width: 0;
+}
+@media (max-width: 800px) {
+  .workshop-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .boss-hud {
+    left: auto;
+    right: 24px;
+    transform: none;
+    width: 45%;
+  }
+  .boss-hud > div:first-child {
+    font-size: 9px;
+  }
+  .workshop-card {
+    min-height: 200px;
+  }
+}
+@media (max-height: 800px) {
+  .modal:has(.end-panel) {
+    overflow-y: auto;
+    align-items: safe center;
+  }
+  .end-panel {
+    padding: 12px 0;
+  }
+  .end-panel h2 {
+    margin-top: 8px;
+  }
+}
+
+/* Each progression track has one home: energy in build mode, scrap in the bank. */
+.run-hud {
+  gap: clamp(18px, 3vw, 40px);
+}
+.scrap-block {
+  color: #ad583e;
+}
+.scrap-block > strong {
+  font:
+    700 30px/0.9 "Barlow Condensed",
+    sans-serif;
+}
+.scrap-block > small {
+  display: block;
+  font:
+    7px "DM Mono",
+    monospace;
+  margin-top: 6px;
+  letter-spacing: 0.4px;
+}
+.scrap-block .hud-label {
+  color: #ad583e;
+  white-space: nowrap;
+}
+.wallet-purpose {
+  color: #425e4c !important;
+  margin: 4px 0 8px;
+}
+.tower-role {
+  display: block;
+  font:
+    9px "DM Mono",
+    monospace;
+  color: #527f64;
+  font-style: normal;
+  margin-top: 5px;
+}
+.workshop-bonus {
+  font:
+    9px/1.6 "DM Mono",
+    monospace;
+  color: #527f64;
+  margin-bottom: 16px;
+}
+#buffs small {
+  font-size: 8px;
+  opacity: 0.7;
+}
+@media (max-width: 1000px) {
+  .run-hud {
+    gap: 16px;
+    margin: 0 15px;
+  }
+  .health-block {
+    width: 135px;
+  }
+  .scrap-block > small {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .health-block {
+    width: 90px;
+  }
+  .scrap-block > strong {
+    font-size: 23px;
+  }
+  .scrap-block .hud-label {
+    font-size: 6px;
+    margin-bottom: 5px;
+  }
+  .run-hud {
+    gap: 12px;
+    margin: 0 10px;
   }
 }

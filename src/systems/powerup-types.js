@@ -21,13 +21,13 @@ export const POWERUPS = {
     name: "QUAD DAMAGE",
     icon: "4×",
     duration: 10,
-    description: "FOUR TIMES THE FIREPOWER",
+    description: "MAIN GUN DAMAGE ×4",
   },
   overdrive: {
     name: "OVERDRIVE",
     icon: "≫",
     duration: 10,
-    description: "DOUBLE THE RATE OF FIRE",
+    description: "MAIN GUN FIRE RATE ×2",
   },
   shield: {
     name: "SHIELD",

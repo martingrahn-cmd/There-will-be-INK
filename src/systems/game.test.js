@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CombatSystem, ScoreSystem } from "./game.js";
+import { CombatSystem, ScoreSystem, ENEMY_TYPES } from "./game.js";
 function makeGame() {
   const g = new CombatSystem({ rng: () => 0.5 });
   g.start();
@@ -358,6 +358,120 @@ function defenseGame() {
   g.start();
   return g;
 }
+test("late defense tuning preserves enemy stats and composition in the first three waves", () => {
+  for (const wave of [1, 2, 3]) {
+    const g = defenseGame();
+    g.defense.next(g);
+    g.wave.number = wave;
+    for (const [type, base] of Object.entries(ENEMY_TYPES)) {
+      g.spawnEnemy(type);
+      const e = g.enemies.items.at(-1);
+      assert.equal(e.health, base.health * (1.1 + (wave - 1) * 0.24));
+      assert.equal(e.speed, base.speed * (1 + wave * 0.03));
+    }
+    const counts = {};
+    g.enemies.items = [];
+    g.spawnEnemy = (type) => (counts[type] = (counts[type] ?? 0) + 1);
+    for (let i = 0; i < 100; i++) {
+      g.rng = () => (i + 0.5) / 100;
+      g.wave.elapsed = 10;
+      g.wave.spawnTimer = 0;
+      g.wave.update(1 / 60, g);
+    }
+    assert.deepEqual(
+      counts,
+      [
+        { charger: 25, swarmer: 67, exploder: 8 },
+        { brute: 26, charger: 19, swarmer: 47, exploder: 8 },
+        { shooter: 4, swarmer: 55, brute: 14, charger: 19, exploder: 8 },
+      ][wave - 1],
+    );
+  }
+});
+test("late defense waves send more heavy enemies and respect the live shooter cap", () => {
+  for (const [wave, expected, cap] of [
+    [4, { shooter: 14, brute: 28, charger: 26, swarmer: 24, exploder: 8 }, 6],
+    [5, { shooter: 18, brute: 34, charger: 28, swarmer: 12, exploder: 8 }, 8],
+  ]) {
+    const g = defenseGame();
+    g.wave.number = wave;
+    const counts = {};
+    for (let i = 0; i < 100; i++) {
+      g.enemies.items = [];
+      g.rng = () => (i + 0.5) / 100;
+      g.wave.elapsed = 10;
+      g.wave.spawnTimer = 0;
+      g.wave.update(1 / 60, g);
+      const type = g.enemies.items.at(-1).type;
+      counts[type] = (counts[type] ?? 0) + 1;
+    }
+    assert.deepEqual(counts, expected);
+    g.enemies.items = [];
+    g.rng = () => 0.01;
+    for (let i = 0; i < cap + 2; i++) {
+      g.wave.spawnTimer = 0;
+      g.wave.update(1 / 60, g);
+    }
+    assert.equal(
+      g.enemies.items.filter((e) => e.type === "shooter").length,
+      cap,
+    );
+    assert.equal(g.enemies.items.at(-1).type, "charger");
+    g.enemies.items[0].health = 0;
+    g.wave.spawnTimer = 0;
+    g.wave.update(1 / 60, g);
+    assert.equal(g.enemies.items.at(-1).type, "shooter");
+  }
+});
+test("wave five needs active defense even with eight cannons and stacked weapon upgrades", () => {
+  function simulate(active) {
+    let seed = 123;
+    const g = new CombatSystem({
+      mode: "defense",
+      rng: () => {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        return seed / 4294967296;
+      },
+    });
+    g.start();
+    g.bounds = { x: 650, y: 345 };
+    g.defense.layout(g.bounds);
+    g.defense.energy = 960;
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      assert.ok(
+        g.defense.place(g, "gun", Math.cos(a) * 280, Math.sin(a) * 220),
+      );
+    }
+    for (const id of ["double", "ricochet", "piercing", "explosive"])
+      assert.ok(g.upgrades.take(id, g.stats));
+    g.defense.next(g);
+    g.wave.number = 5;
+    for (let i = 0; i < 60 * 90 && g.state === "playing"; i++) {
+      let target = g.enemies.items
+        .filter((e) => e.health > 0)
+        .sort((a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y))[0];
+      if (active) {
+        target = g.powerups.items.find((p) => p.life > 0) || target;
+        if (target) g.aim = { x: target.x, y: target.y };
+      }
+      g.update(
+        1 / 60,
+        active
+          ? {
+              fire: true,
+              secondary: !!target,
+              pulse: g.enemies.items.some((e) => Math.hypot(e.x, e.y) < 180),
+            }
+          : {},
+      );
+      g.events = [];
+    }
+    return g;
+  }
+  assert.equal(simulate(false).state, "gameover");
+  assert.equal(simulate(true).state, "clearing");
+});
 test("defense ramps enemy pressure across all five waves at different frame rates", () => {
   const totals = [];
   for (const fps of [30, 60, 144]) {
@@ -416,6 +530,79 @@ test("defense enemies grow tougher and faster, with elites from wave three", () 
   assert.equal(g.enemies.items.at(-1).elite, true);
   assert.equal(g.enemies.items.at(-1).health, late.health * 2);
 });
+test("defense caps kill and skill income while kills keep scoring, and resets budgets only for a new wave", () => {
+  const g = defenseGame();
+  const d = g.defense;
+  d.next(g);
+  g.wave.spawnTimer = 999;
+  // Tower kills and a screen-clearing pickup share the same kill budget.
+  for (let i = 0; i < 79; i++) {
+    const e = enemy(g, "swarmer", 200, 0);
+    g.damage(e, 999, 0, false);
+  }
+  assert.equal(d.energy, 229);
+  for (let i = 0; i < 10; i++) enemy(g, "swarmer", 200, 0);
+  g.powerups.activate({ type: "nuke", life: 1 }, g);
+  assert.equal(d.energy, 230);
+  assert.equal(g.score.kills, 89);
+  // Six chain bonuses leave just two energy for the final five-energy bonus.
+  for (let i = 0; i < 6; i++) g.damage(enemy(g, "swarmer", 200, 0), 999, 1);
+  g.damage(enemy(g, "shooter", 200, 0), 999);
+  assert.equal(d.energy, 250);
+  assert.equal(d.skillEnergy, 20);
+  assert.equal(d.rewardText, "+2 ENERGY · SILENCED");
+  const score = g.score.value;
+  g.damage(enemy(g, "shooter", 200, 0), 999);
+  assert.equal(d.energy, 250);
+  assert.ok(g.score.value > score);
+  d.open(g);
+  d.close(g);
+  assert.equal(d.next(g), false);
+  assert.equal(d.waveKillEnergy, 80);
+  assert.equal(d.waveSkillEnergy, 20);
+  g.wave.elapsed = g.wave.duration;
+  g.update(0.03);
+  assert.equal(d.energy, 370);
+  for (let i = 0; i < 125; i++) g.update(1 / 60);
+  assert.equal(d.energy, 370);
+  g.choose(g.choices[0].id);
+  assert.equal(d.waveKillEnergy, 80);
+  assert.equal(d.next(g), true);
+  assert.equal(d.waveKillEnergy, 0);
+  assert.equal(d.waveSkillEnergy, 0);
+  g.damage(enemy(g, "swarmer", 200, 0), 999);
+  assert.equal(d.energy, 371);
+  g.start();
+  assert.equal(g.defense.energy, 150);
+  assert.equal(g.defense.waveKillEnergy, 0);
+  assert.equal(g.defense.waveSkillEnergy, 0);
+});
+test("tower purchases and upgrades enforce exact prices and the level cap", () => {
+  for (const [type, price] of [
+    ["gun", 120],
+    ["slow", 140],
+    ["mortar", 150],
+  ]) {
+    const g = defenseGame();
+    const d = g.defense;
+    d.energy = price - 1;
+    assert.equal(d.place(g, type, 150, 100), false);
+    d.energy++;
+    assert.equal(d.place(g, type, 150, 100), true);
+    assert.equal(d.energy, 0);
+    for (const cost of [120, 200]) {
+      d.energy = cost - 1;
+      assert.equal(d.build(g, 0, type), false);
+      d.energy++;
+      assert.equal(d.build(g, 0, type), true);
+      assert.equal(d.energy, 0);
+    }
+    d.energy = 1000;
+    assert.equal(d.build(g, 0, type), false);
+    assert.equal(d.energy, 1000);
+    assert.equal(d.slots[0].level, 3);
+  }
+});
 test("free placement validates bounds, base clearance, overlap and budget", () => {
   const g = defenseGame(),
     d = g.defense;
@@ -425,10 +612,10 @@ test("free placement validates bounds, base clearance, overlap and budget", () =
     [NaN, 10],
   ])
     assert.equal(d.place(g, "gun", x, y), false);
-  assert.equal(d.energy, 100);
+  assert.equal(d.energy, 150);
   assert.equal(d.place(g, "gun", 155, 123), true);
   assert.equal(d.slots[0].x, 155);
-  assert.equal(d.energy, 0);
+  assert.equal(d.energy, 30);
   assert.equal(d.place(g, "slow", -150, 100), false);
   d.energy = 300;
   assert.equal(d.place(g, "slow", 160, 120), false);
@@ -475,7 +662,7 @@ test("defense retains skill rewards and omnidirectional movement", () => {
   e.phase = "tell";
   let before = g.defense.energy;
   g.damage(e, 999);
-  assert.equal(g.defense.energy - before, 18);
+  assert.equal(g.defense.energy - before, 5);
   const sw = enemy(g, "swarmer", 200, -100);
   sw.speed = 44;
   g.enemies.update(0.03, g);
@@ -513,6 +700,9 @@ test("five defense waves end in victory and restart clears placed towers", () =>
     g.defense.close(g);
     g.enemies.items = [];
     g.wave.elapsed = g.wave.duration;
+    g.bosses.update(g);
+    for (const boss of g.enemies.items.filter((e) => e.boss))
+      g.damage(boss, 99999);
     g.update(0.03);
     assert.equal(g.state, "clearing");
     assert.equal(g.defense.next(g), false);
@@ -540,6 +730,6 @@ test("five defense waves end in victory and restart clears placed towers", () =>
   }
   g.start();
   assert.equal(g.defense.slots.length, 0);
-  assert.equal(g.defense.energy, 100);
+  assert.equal(g.defense.energy, 150);
   assert.equal(g.clearTimer, 0);
 });

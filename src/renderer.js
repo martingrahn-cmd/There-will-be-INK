@@ -33,6 +33,74 @@ function enemyTexture(type) {
   return texture((c) => {
     c.strokeStyle = INK;
     c.lineWidth = 4;
+    if (type === "boss") {
+      path(
+        c,
+        [
+          [-39, -32],
+          [28, -39],
+          [46, -15],
+          [41, 32],
+          [17, 44],
+          [-38, 35],
+          [-48, 8],
+        ],
+        "#bd6149",
+        INK,
+        4,
+      );
+      path(
+        c,
+        [
+          [-31, -30],
+          [-39, -52],
+          [-14, -39],
+          [0, -57],
+          [14, -39],
+          [37, -52],
+          [29, -30],
+        ],
+        "#e3bd71",
+        INK,
+        3,
+      );
+      path(
+        c,
+        [
+          [-30, -17],
+          [27, -19],
+          [34, 15],
+          [17, 30],
+          [-26, 23],
+        ],
+        "#eee1bc",
+        INK,
+        3,
+      );
+      c.lineWidth = 5;
+      c.beginPath();
+      c.moveTo(-24, -9);
+      c.lineTo(-7, -3);
+      c.moveTo(9, -3);
+      c.lineTo(25, -12);
+      c.stroke();
+      c.fillStyle = INK;
+      c.fillRect(-20, 9, 42, 9);
+      c.fillStyle = "#eee1bc";
+      for (let x = -15; x < 20; x += 10) c.fillRect(x, 9, 4, 5);
+      path(
+        c,
+        [
+          [31, -7],
+          [57, -8],
+          [58, 7],
+          [34, 9],
+        ],
+        "#263f54",
+        INK,
+        2,
+      );
+    }
     if (type === "swarmer") {
       path(
         c,
@@ -182,7 +250,7 @@ function enemyTexture(type) {
       c.lineTo(-10, 11);
       c.stroke();
     }
-    if (type !== "shooter" && type !== "exploder") {
+    if (type !== "shooter" && type !== "exploder" && type !== "boss") {
       c.fillStyle = INK;
       c.fillRect(-12, -5, 7, 9);
       c.fillRect(10, -5, 7, 9);
@@ -215,7 +283,14 @@ export class GameRenderer {
     this.dummy = new THREE.Object3D();
     this.color = new THREE.Color();
     this.groups = {};
-    for (const type of ["swarmer", "brute", "charger", "shooter", "exploder"])
+    for (const type of [
+      "swarmer",
+      "brute",
+      "charger",
+      "shooter",
+      "exploder",
+      "boss",
+    ])
       this.groups[type] = this.instances(enemyTexture(type), 450, 3);
     this.bullets = this.instances(
       texture((c) => {
@@ -491,7 +566,7 @@ export class GameRenderer {
             e.y,
             e.radius * 3,
             e.radius * 3,
-            Math.atan2(-e.y, -e.x),
+            e.boss ? 0 : Math.atan2(-e.y, -e.x),
             e.hit > 0
               ? "#f1c393"
               : g.buffs.freeze > 0
@@ -530,7 +605,7 @@ export class GameRenderer {
     this.finish(this.bullets, i);
     i = 0;
     for (const b of g.enemyBullets.slice(0, 250))
-      this.put(this.hostile, i++, b.x, b.y, 13, 13);
+      this.put(this.hostile, i++, b.x, b.y, b.boss ? 19 : 13, b.boss ? 19 : 13);
     this.finish(this.hostile, i);
     i = 0;
     for (const p of this.effects.particles)
@@ -704,6 +779,29 @@ export class GameRenderer {
       c.stroke();
     }
     for (const e of g.enemies.items) {
+      if (e.boss && e.health > 0) {
+        c.strokeStyle = e.phase === "recovery" ? "#527f64" : "#b84f3e";
+        c.lineWidth = 3;
+        c.setLineDash(e.phase === "recovery" ? [] : [7, 5]);
+        c.beginPath();
+        c.arc(e.x, e.y, e.radius + 14, 0, Math.PI * 2);
+        c.stroke();
+        if (e.phase === "windup") {
+          c.beginPath();
+          c.moveTo(e.x, e.y);
+          c.lineTo(0, 0);
+          c.stroke();
+        }
+        c.setLineDash([]);
+        c.save();
+        c.translate(e.x, e.y - e.radius - 24);
+        c.scale(1, -1);
+        c.font = "bold 11px monospace";
+        c.textAlign = "center";
+        c.fillStyle = "#923d2f";
+        c.fillText(e.name, 0, 0);
+        c.restore();
+      }
       if (
         e.type === "exploder" &&
         Math.hypot(e.x - g.aim.x, e.y - g.aim.y) < 40

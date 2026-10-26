@@ -1,8 +1,8 @@
-import { TOWERS } from "./systems/defense.js";
+import { TOWERS, ECONOMY } from "./systems/defense.js";
 export function setupDefenseUI(game, view, clearInput) {
   const root = document.createElement("div");
   root.className = "defense-ui";
-  root.innerHTML = `<div class="build-wallet"><span>BUILD ENERGY</span><strong id="energy-value">100</strong><button id="open-build">BUILD / B</button><small id="skill-reward">Good shots earn reinforcements.</small></div><div class="build-guide"><strong>BUILD YOUR DEFENSE</strong><span>Choose a tower below, then click anywhere on the paper.</span><button id="launch-wave" class="primary">START WAVE 1 →</button></div><div class="build-options"></div>`;
+  root.innerHTML = `<div class="build-wallet"><span>BUILD ENERGY</span><strong id="energy-value">${ECONOMY.startingEnergy}</strong><button id="open-build">BUILD / B</button><small class="wallet-purpose">TOWERS ONLY · THIS RUN</small><small id="wave-budget"></small><small id="skill-reward">Good shots earn reinforcements.</small></div><div class="build-guide"><strong>BUILD YOUR DEFENSE</strong><span>Spend energy on coverage, control or crowd damage. Towers last for this run.</span><button id="launch-wave" class="primary">START WAVE 1 →</button></div><div class="build-options"></div>`;
   document.querySelector(".notebook").append(root);
   const arena = document.querySelector("#arena");
   arena.addEventListener("pointermove", (e) => {
@@ -51,12 +51,12 @@ export function setupDefenseUI(game, view, clearInput) {
       b.className = "tower-choice";
       b.classList.toggle("chosen", d.placing === type);
       b.disabled = d.energy < spec.cost;
-      b.innerHTML = `<strong>${spec.icon} ${spec.name}</strong><span>${spec.description}</span><small>${spec.cost} ENERGY</small>`;
+      b.innerHTML = `<strong>${spec.icon} ${spec.name}</strong><em class="tower-role">${spec.role}</em><span>${spec.description}</span><small>${spec.cost} ENERGY</small>`;
       b.onclick = () => {
         d.placing = type;
         d.selected = -1;
         root.querySelector(".build-guide>span").textContent =
-          "Move onto the paper to see range. Click to build.";
+          "Check coverage, then click to place. Weapon mods affect your weapons only.";
         renderOptions();
       };
       options.append(b);
@@ -100,7 +100,15 @@ export function setupDefenseUI(game, view, clearInput) {
     root.querySelector("#open-build").classList.toggle("hidden", building);
     root.querySelector("#energy-value").textContent = d.energy;
     root.querySelector("#skill-reward").textContent =
-      d.rewardTime > 0 ? d.rewardText : "Kills +3 · Skill shots +10–20";
+      d.rewardTime > 0
+        ? d.rewardText
+        : `Kills +${ECONOMY.killReward} · Skill shots +3–5`;
+    const killLeft = ECONOMY.killBudget - d.waveKillEnergy;
+    const skillLeft = ECONOMY.skillBudget - d.waveSkillEnergy;
+    root.querySelector("#wave-budget").textContent =
+      killLeft === 0 && skillLeft === 0
+        ? "WAVE BUDGET EMPTY · KILLS STILL SCORE"
+        : `WAVE ENERGY LEFT · Kills ${killLeft} · Skill ${skillLeft}`;
     root.querySelector("#launch-wave").textContent =
       d.resumeState === "playing"
         ? "RESUME WAVE →"

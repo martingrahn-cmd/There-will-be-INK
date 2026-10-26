@@ -1,11 +1,37 @@
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 await page.goto(process.env.BASE_URL || "http://localhost:5174");
+await expect(page.locator(".note-grid")).toContainText("Shape your weapon.");
+await expect(page.locator(".note-grid")).toContainText("Come back stronger.");
 await page.getByRole("button", { name: "BUILD A DEFENSE" }).click();
+await expect(page.locator(".wallet-purpose")).toHaveText(
+  "TOWERS ONLY · THIS RUN",
+);
+await expect(page.locator(".scrap-block .hud-label")).toHaveText(
+  "SCRAP · KEPT",
+);
+await expect(page.locator(".score-block .hud-label")).toHaveText(
+  "SCORE · RECORD ONLY",
+);
+await expect(page.locator(".tower-role")).toHaveText([
+  "FOCUS FIRE",
+  "CONTROL",
+  "CROWD CLEAR",
+]);
+await expect(page.locator("#energy-value")).toHaveText("150");
+await expect(page.getByRole("button", { name: /Ⅱ AUTO CANNON/ })).toContainText(
+  "120 ENERGY",
+);
+await expect(page.getByRole("button", { name: /◎ SLOW FIELD/ })).toContainText(
+  "140 ENERGY",
+);
+await expect(page.getByRole("button", { name: /✣ MORTAR/ })).toContainText(
+  "150 ENERGY",
+);
 async function clickWorld(x, y) {
   const p = await page.evaluate(
     ({ x, y }) => {
@@ -24,15 +50,19 @@ await page.getByRole("button", { name: /Ⅱ AUTO CANNON/ }).click();
 await clickWorld(0, 0);
 assert.equal(
   await page.evaluate(() => window.__doodle.game.defense.energy),
-  100,
+  150,
 );
 await clickWorld(-170, 80);
+await expect(page.locator("#energy-value")).toHaveText("30");
+await expect(
+  page.getByRole("button", { name: /UPGRADE TO LEVEL 2/ }),
+).toBeDisabled();
 assert.equal(
   await page.evaluate(() => window.__doodle.game.defense.slots.length),
   1,
 );
 await page.evaluate(() => {
-  window.__doodle.game.defense.energy = 400;
+  window.__doodle.game.defense.energy = 410;
 });
 await page.waitForTimeout(100);
 await page.getByRole("button", { name: /◎ SLOW FIELD/ }).click();
@@ -68,6 +98,16 @@ await page
   .getByRole("button", { name: "AUTO-PAUSE ON FOCUS LOSS: ON" })
   .click();
 await page.getByRole("button", { name: "BACK TO THE MESS" }).click();
+await page.evaluate(() => {
+  const g = window.__doodle.game;
+  for (let i = 0; i < 100; i++) {
+    g.spawnEnemy("shooter");
+    g.damage(g.enemies.items.at(-1), 99999);
+  }
+});
+await expect(page.locator("#wave-budget")).toHaveText(
+  "WAVE BUDGET EMPTY · KILLS STILL SCORE",
+);
 for (let wave = 1; wave <= 5; wave++) {
   await page.evaluate(() => {
     const g = window.__doodle.game;
@@ -75,14 +115,26 @@ for (let wave = 1; wave <= 5; wave++) {
     g.pendingBlasts = [];
     g.wave.elapsed = g.wave.duration;
     g.wave.spawnTimer = 999;
+    g.bosses.update(g);
+    for (const boss of g.enemies.items.filter((e) => e.boss))
+      g.damage(boss, 99999);
     window.__doodle.view.effects.shake = 18;
   });
   await page.getByRole("heading", { name: "LEVEL CLEAR" }).waitFor();
+  await expect(page.locator(".level-clear-reward")).toContainText(
+    "+120 BUILD ENERGY",
+  );
   assert.equal(await page.locator("[data-upgrade]").count(), 0);
   if (wave === 1) {
     await page.screenshot({ path: "artifacts/level-clear.png" });
   }
   if (wave < 5) {
+    await expect(page.locator(".upgrade-panel > p")).toContainText(
+      "One free mod for your weapons.",
+    );
+    await expect(page.locator(".upgrade-foot")).toContainText("THIS RUN ONLY");
+    if (wave === 1)
+      await page.screenshot({ path: "artifacts/weapon-roles.png" });
     await page.locator("[data-upgrade]").first().click();
     assert.equal(
       await page.evaluate(() => window.__doodle.game.state),
@@ -114,6 +166,9 @@ for (let wave = 1; wave <= 5; wave++) {
     await page
       .getByRole("button", { name: `START WAVE ${wave + 1} / 5` })
       .click();
+    await expect(page.locator("#wave-budget")).toHaveText(
+      "WAVE ENERGY LEFT · Kills 80 · Skill 20",
+    );
   } else
     await page.getByRole("heading", { name: "The page is safe." }).waitFor();
 }
