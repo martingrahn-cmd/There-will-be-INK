@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CombatSystem, ScoreSystem, ENEMY_TYPES } from "./game.js";
+import { CombatSystem, ScoreSystem, ENEMY_TYPES, ARENA } from "./game.js";
 function makeGame() {
   const g = new CombatSystem({ rng: () => 0.5 });
   g.start();
@@ -732,4 +732,42 @@ test("five defense waves end in victory and restart clears placed towers", () =>
   assert.equal(g.defense.slots.length, 0);
   assert.equal(g.defense.energy, 150);
   assert.equal(g.clearTimer, 0);
+});
+test("escape resumes a wave from build mode instead of pausing it", () => {
+  const g = defenseGame();
+  g.escape();
+  assert.equal(g.state, "building");
+  g.defense.next(g);
+  g.defense.open(g);
+  assert.equal(g.state, "building");
+  g.escape();
+  assert.equal(g.state, "playing");
+  g.escape();
+  assert.equal(g.state, "paused");
+  g.escape();
+  assert.equal(g.state, "playing");
+});
+test("the arena has fixed bounds and enemies spawn just outside it", () => {
+  let seed = 7;
+  const g = new CombatSystem({
+    mode: "defense",
+    rng: () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    },
+  });
+  g.start();
+  assert.deepEqual(g.bounds, ARENA);
+  assert.deepEqual(g.defense.bounds, ARENA);
+  g.defense.next(g);
+  for (let i = 0; i < 300; i++) g.spawnEnemy("swarmer");
+  for (const e of g.enemies.items) {
+    assert.ok(Math.abs(e.x) <= ARENA.x + 25.001);
+    assert.ok(Math.abs(e.y) <= ARENA.y + 25.001);
+    assert.ok(
+      Math.abs(e.x) >= ARENA.x - 0.001 || Math.abs(e.y) >= ARENA.y - 0.001,
+    );
+  }
+  g.start();
+  assert.deepEqual(g.bounds, ARENA);
 });

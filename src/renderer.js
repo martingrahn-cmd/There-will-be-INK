@@ -2,8 +2,13 @@ import { TOWERS } from "./systems/defense.js";
 import { POWERUPS } from "./systems/powerup-types.js";
 import * as THREE from "three";
 import { EffectsSystem } from "./systems/effects.js";
+import { ARENA } from "./systems/game.js";
 const INK = "#263f54",
   RED = "#b84f3e";
+// The visible playfield: the arena plus the 25-unit spawn margin. Spare screen
+// space becomes paper around it instead of a larger battlefield.
+const VIEW_WIDTH = (ARENA.x + 25) * 2,
+  VIEW_HEIGHT = 720;
 function texture(draw, size = 128) {
   const c = document.createElement("canvas");
   c.width = c.height = size;
@@ -499,14 +504,26 @@ export class GameRenderer {
     const { width, height } = this.container.getBoundingClientRect();
     this.width = width;
     this.height = height;
-    this.worldHeight = 720;
-    this.worldWidth = (720 * width) / Math.max(1, height);
+    const aspect =
+      width > 0 && height > 0 ? width / height : VIEW_WIDTH / VIEW_HEIGHT;
+    this.worldWidth = Math.max(VIEW_WIDTH, VIEW_HEIGHT * aspect);
+    this.worldHeight = Math.max(VIEW_HEIGHT, VIEW_WIDTH / aspect);
+    this.letterboxed =
+      this.worldWidth > VIEW_WIDTH + 1 || this.worldHeight > VIEW_HEIGHT + 1;
     this.camera.left = -this.worldWidth / 2;
     this.camera.right = this.worldWidth / 2;
-    this.camera.top = 360;
-    this.camera.bottom = -360;
+    this.camera.top = this.worldHeight / 2;
+    this.camera.bottom = -this.worldHeight / 2;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    const unit = width / this.worldWidth;
+    this.renderer.setScissor(
+      (width - VIEW_WIDTH * unit) / 2,
+      (height - VIEW_HEIGHT * unit) / 2,
+      VIEW_WIDTH * unit,
+      VIEW_HEIGHT * unit,
+    );
+    this.renderer.setScissorTest(true);
     this.overlay.width = width * devicePixelRatio;
     this.overlay.height = height * devicePixelRatio;
     this.overlay.style.width = `${width}px`;
@@ -516,7 +533,7 @@ export class GameRenderer {
     const r = this.container.getBoundingClientRect();
     return {
       x: ((clientX - r.left - r.width / 2) / r.width) * this.worldWidth,
-      y: (-(clientY - r.top - r.height / 2) / r.height) * 720,
+      y: (-(clientY - r.top - r.height / 2) / r.height) * this.worldHeight,
     };
   }
   reset() {
@@ -553,8 +570,6 @@ export class GameRenderer {
     this.effects.update(dt);
     if (g.state !== "playing") this.effects.shake = 0;
     this.recoil = Math.max(0, this.recoil - dt * 45);
-    g.bounds = { x: Math.max(220, this.worldWidth / 2 - 25), y: 345 };
-    if (g.defense) g.defense.layout(g.bounds);
     for (const type in this.groups) {
       let i = 0;
       for (const e of g.enemies.items)
@@ -652,8 +667,12 @@ export class GameRenderer {
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, this.width, this.height);
     c.translate(this.width / 2, this.height / 2);
-    const scale = this.height / 720;
+    const scale = this.height / this.worldHeight;
     c.scale(scale, -scale);
+    c.save();
+    c.beginPath();
+    c.rect(-VIEW_WIDTH / 2, -VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT);
+    c.clip();
     c.lineWidth = 1.2;
     if (g.defense) {
       const d = g.defense;
@@ -921,6 +940,15 @@ export class GameRenderer {
       c.font = "bold 9px monospace";
       c.fillText(POWERUPS[p.type].name, 0, 43);
       c.restore();
+    }
+    // The crosshair stays unclipped: the system cursor is hidden over the arena.
+    c.restore();
+    if (this.letterboxed) {
+      c.strokeStyle = "rgba(52,75,85,.28)";
+      c.lineWidth = 1.5;
+      c.setLineDash([6, 8]);
+      c.strokeRect(-VIEW_WIDTH / 2, -VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT);
+      c.setLineDash([]);
     }
     if (g.state === "playing") {
       c.strokeStyle = INK;

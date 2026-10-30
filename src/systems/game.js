@@ -4,6 +4,9 @@ import { POWERUPS } from "./powerup-types.js";
 import { BossSystem } from "./bosses.js";
 import { ProgressionSystem } from "./progression.js";
 export const WAVE_DURATION = 45;
+// Fixed playfield half-extents. The renderer letterboxes around it, so spawn
+// distance and tower space are the same on every screen.
+export const ARENA = Object.freeze({ x: 615, y: 345 });
 export const ENEMY_TYPES = {
   exploder: { health: 28, speed: 40, radius: 18, damage: 6, score: 25 },
   swarmer: { health: 19, speed: 44, radius: 12, damage: 5, score: 10 },
@@ -635,7 +638,7 @@ export class CombatSystem {
     this.enemyBullets = [];
     this.choices = [];
     this.damageFlash = 0;
-    this.bounds = { x: 610, y: 360 };
+    this.bounds = { ...ARENA };
     if (this.defense) {
       this.wave.duration = 35;
       this.defense.layout(this.bounds);
@@ -820,6 +823,12 @@ export class CombatSystem {
   pause() {
     if (this.state === "playing") this.state = "paused";
     else if (this.state === "paused") this.state = "playing";
+  }
+  // Esc resumes a wave from build mode; everywhere else it toggles pause.
+  escape() {
+    if (this.state === "building") {
+      if (this.defense.resumeState === "playing") this.defense.close(this);
+    } else this.pause();
   }
   choose(id) {
     if (this.state !== "upgrade" || !this.choices.some((u) => u.id === id))

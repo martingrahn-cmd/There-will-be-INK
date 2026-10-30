@@ -240,7 +240,7 @@ window.addEventListener("keydown", (e) => {
   }
   if (e.code === "Escape" && !e.repeat) {
     if (game.state === "workshop") game.state = workshopReturn;
-    else game.pause();
+    else game.escape();
     syncState();
   }
   if (

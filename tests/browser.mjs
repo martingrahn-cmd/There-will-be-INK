@@ -39,7 +39,7 @@ async function clickWorld(x, y) {
         r = document.querySelector("#arena").getBoundingClientRect();
       return {
         x: r.left + r.width * (0.5 + x / v.worldWidth),
-        y: r.top + r.height * (0.5 - y / 720),
+        y: r.top + r.height * (0.5 - y / v.worldHeight),
       };
     },
     { x, y },

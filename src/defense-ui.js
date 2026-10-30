@@ -80,12 +80,6 @@ export function setupDefenseUI(game, view, clearInput) {
       else game.defense.open(game);
       renderOptions();
     }
-    if (
-      e.code === "Escape" &&
-      game.state === "building" &&
-      game.defense.resumeState === "playing"
-    )
-      game.defense.close(game);
   });
   let last = "";
   return () => {

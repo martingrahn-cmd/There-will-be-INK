@@ -79,6 +79,7 @@ npm run build
 npx playwright install chromium
 # Starta npm run dev -- --port 5174 i ett annat terminalfönster:
 node tests/browser.mjs
+node tests/arena-browser.mjs
 BASE_URL=http://localhost:5174 node tests/roguelite-browser.mjs
 ```
 
