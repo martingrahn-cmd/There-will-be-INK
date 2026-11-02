@@ -18,7 +18,7 @@ export function renderWorkshop(root, game, close) {
       </button>`;
       })
       .join("")}</div>
-    <p class="workshop-foot">1 scrap per 10 kills · 8 per cleared wave · 15 / 30 per boss.<br>${p.saveError ? "Saving is unavailable. Progress is kept only in this session until saving works again." : "Saved automatically in this browser. Five levels per upgrade."}</p>
+    <p class="workshop-foot">1 scrap per 10 kills · 8 per cleared wave · 15 / 30 per boss.<br>${p.loadProblem === "newer" ? "This browser has a save from a newer version of the game. It is left untouched; progress here is kept only for this session." : p.saveError ? "Saving is unavailable. Progress is kept only in this session until saving works again." : p.loadProblem === "corrupt" ? "The old save could not be read. A copy was kept in this browser; new progress is saved normally." : "Saved automatically in this browser. Five levels per upgrade."}</p>
     <div class="workshop-message" role="status" aria-live="polite"></div>
   </div>`;
   root.querySelector("#close-workshop").onclick = close;

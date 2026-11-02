@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CombatSystem, ScoreSystem, ENEMY_TYPES, ARENA } from "./game.js";
+import {
+  CombatSystem,
+  ScoreSystem,
+  ENEMY_TYPES,
+  ARENA,
+  EVENT_CAP,
+} from "./game.js";
 function makeGame() {
   const g = new CombatSystem({ rng: () => 0.5 });
   g.start();
@@ -784,4 +790,19 @@ test("nuke kills pay ordinary kill energy but no skill bonuses", () => {
   assert.equal(g.defense.energy, energy + 2);
   assert.equal(g.defense.skillEnergy, 0);
   assert.equal(g.defense.waveSkillEnergy, 0);
+});
+test("a flooded frame drops only cosmetic events and counts them", () => {
+  const g = defenseGame();
+  g.events = [];
+  for (let i = 0; i < EVENT_CAP; i++) g.emit("hit", { x: 0, y: 0 });
+  g.emit("death", { x: 0, y: 0 });
+  g.emit("bossDefeated", { name: "THE EDITOR", reward: 30 });
+  g.emit("gameover");
+  assert.equal(g.droppedEvents, 1);
+  assert.deepEqual(
+    g.events.slice(EVENT_CAP).map((e) => e.type),
+    ["bossDefeated", "gameover"],
+  );
+  g.start();
+  assert.equal(g.droppedEvents, 0);
 });

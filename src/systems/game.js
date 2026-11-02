@@ -36,6 +36,23 @@ const LATE_DEFENSE_WAVES = {
   },
 };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// High-volume, purely cosmetic events. Only these are dropped when a frame
+// overflows the event cap; state changes and announcements always get through.
+export const EVENT_CAP = 1400;
+const BULK_EVENTS = new Set([
+  "hit",
+  "death",
+  "explosion",
+  "shot",
+  "supportShot",
+  "enemyShot",
+  "ricochet",
+  "seekers",
+  "nova",
+  "mortar",
+  "warning",
+  "breach",
+]);
 export class ScoreSystem {
   constructor() {
     this.value = 0;
@@ -630,6 +647,7 @@ export class CombatSystem {
     this.clearTimer = 0;
     this.aim = { x: 200, y: 0 };
     this.events = [];
+    this.droppedEvents = 0;
     this.enemies = new EnemySystem();
     this.weapons = new WeaponSystem();
     this.wave = new WaveSystem();
@@ -662,7 +680,11 @@ export class CombatSystem {
     }
   }
   emit(type, data = {}) {
-    if (this.events.length < 1400) this.events.push({ type, ...data });
+    if (this.events.length >= EVENT_CAP && BULK_EVENTS.has(type)) {
+      this.droppedEvents++;
+      return;
+    }
+    this.events.push({ type, ...data });
   }
   spawnEnemy(type) {
     if (this.enemies.items.length >= 450) return;

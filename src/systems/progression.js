@@ -1,4 +1,6 @@
 export const PROGRESSION_KEY = "doodle-defense-workshop-v1";
+export const PROGRESSION_BACKUP_KEY = `${PROGRESSION_KEY}-unreadable`;
+const SAVE_VERSION = 1;
 export const WORKSHOP_UPGRADES = {
   fireRate: {
     name: "Loose trigger",
@@ -38,29 +40,57 @@ export class ProgressionSystem {
       Object.keys(WORKSHOP_UPGRADES).map((id) => [id, 0]),
     );
     this.saveError = false;
+    // "corrupt": unreadable save, backed up before the first overwrite.
+    // "newer": save from a newer build, never overwritten by this one.
+    this.loadProblem = null;
+    this.unreadable = null;
+    let raw;
     try {
-      const raw = storage?.getItem(PROGRESSION_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data?.version !== 1) throw new Error("Unknown save version");
-        this.scrap =
-          Number.isSafeInteger(data.scrap) && data.scrap >= 0 ? data.scrap : 0;
-        for (const id in this.levels) {
-          const level = data.levels?.[id];
-          this.levels[id] = Number.isInteger(level)
-            ? Math.max(0, Math.min(COSTS.length, level))
-            : 0;
-        }
-      }
+      raw = storage?.getItem(PROGRESSION_KEY);
     } catch {
       this.saveError = true;
+      return;
+    }
+    if (!raw) return;
+    try {
+      const data = JSON.parse(raw);
+      if (Number.isInteger(data?.version) && data.version > SAVE_VERSION) {
+        this.loadProblem = "newer";
+        this.saveError = true;
+        return;
+      }
+      if (data?.version !== SAVE_VERSION)
+        throw new Error("Unknown save version");
+      this.scrap =
+        Number.isSafeInteger(data.scrap) && data.scrap >= 0 ? data.scrap : 0;
+      for (const id in this.levels) {
+        const level = data.levels?.[id];
+        this.levels[id] = Number.isInteger(level)
+          ? Math.max(0, Math.min(COSTS.length, level))
+          : 0;
+      }
+    } catch {
+      this.loadProblem = "corrupt";
+      this.unreadable = raw;
     }
   }
   save() {
+    if (this.loadProblem === "newer") {
+      this.saveError = true;
+      return;
+    }
     try {
+      if (this.unreadable !== null) {
+        this.storage?.setItem(PROGRESSION_BACKUP_KEY, this.unreadable);
+        this.unreadable = null;
+      }
       this.storage?.setItem(
         PROGRESSION_KEY,
-        JSON.stringify({ version: 1, scrap: this.scrap, levels: this.levels }),
+        JSON.stringify({
+          version: SAVE_VERSION,
+          scrap: this.scrap,
+          levels: this.levels,
+        }),
       );
       this.saveError = false;
     } catch {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   ProgressionSystem,
   PROGRESSION_KEY,
+  PROGRESSION_BACKUP_KEY,
   WORKSHOP_UPGRADES,
 } from "./progression.js";
 import { CombatSystem } from "./game.js";
@@ -40,7 +41,7 @@ test("workshop purchases persist, enforce funds and caps, and reject unknown upg
 test("unreadable and invalid saves do not crash or inject invalid balances and stats", () => {
   const bad = new ProgressionSystem(memoryStorage("not json"));
   assert.equal(bad.scrap, 0);
-  assert.equal(bad.saveError, true);
+  assert.equal(bad.loadProblem, "corrupt");
   const sanitized = new ProgressionSystem(
     memoryStorage(
       JSON.stringify({
@@ -115,4 +116,52 @@ test("all workshop bonuses apply to the next defense run without modifying survi
   survival.start();
   assert.equal(survival.health, 100);
   assert.equal(survival.stats.damage, 14);
+});
+function mapStorage(entries = {}, { failKey } = {}) {
+  const data = new Map(Object.entries(entries));
+  return {
+    data,
+    getItem: (key) => data.get(key) ?? null,
+    setItem: (key, value) => {
+      if (key === failKey) throw new Error("quota");
+      data.set(key, value);
+    },
+  };
+}
+test("an unreadable save is backed up before new progress overwrites it", () => {
+  const storage = mapStorage({ [PROGRESSION_KEY]: "{broken" });
+  const p = new ProgressionSystem(storage);
+  assert.equal(p.loadProblem, "corrupt");
+  assert.equal(p.scrap, 0);
+  assert.equal(storage.data.get(PROGRESSION_KEY), "{broken");
+  assert.equal(p.earn(5), true);
+  assert.equal(storage.data.get(PROGRESSION_BACKUP_KEY), "{broken");
+  assert.equal(JSON.parse(storage.data.get(PROGRESSION_KEY)).scrap, 5);
+  assert.equal(p.saveError, false);
+  // The backup is written once, not replaced by later saves.
+  p.earn(5);
+  assert.equal(storage.data.get(PROGRESSION_BACKUP_KEY), "{broken");
+});
+test("a failed backup keeps the unreadable save in place", () => {
+  const storage = mapStorage(
+    { [PROGRESSION_KEY]: "{broken" },
+    { failKey: PROGRESSION_BACKUP_KEY },
+  );
+  const p = new ProgressionSystem(storage);
+  assert.equal(p.earn(5), true);
+  assert.equal(p.scrap, 5);
+  assert.equal(p.saveError, true);
+  assert.equal(storage.data.get(PROGRESSION_KEY), "{broken");
+});
+test("a save from a newer version is never overwritten", () => {
+  const newer = JSON.stringify({ version: 2, scrap: 900, perks: ["x"] });
+  const storage = mapStorage({ [PROGRESSION_KEY]: newer });
+  const p = new ProgressionSystem(storage);
+  assert.equal(p.loadProblem, "newer");
+  assert.equal(p.saveError, true);
+  assert.equal(p.earn(50), true);
+  assert.equal(p.buy("hull"), true);
+  assert.equal(p.levels.hull, 1);
+  assert.equal(storage.data.get(PROGRESSION_KEY), newer);
+  assert.equal(storage.data.has(PROGRESSION_BACKUP_KEY), false);
 });
