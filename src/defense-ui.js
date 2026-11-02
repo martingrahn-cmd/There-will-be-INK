@@ -2,7 +2,7 @@ import { TOWERS, ECONOMY } from "./systems/defense.js";
 export function setupDefenseUI(game, view, clearInput) {
   const root = document.createElement("div");
   root.className = "defense-ui";
-  root.innerHTML = `<div class="build-wallet"><span>BUILD ENERGY</span><strong id="energy-value">${ECONOMY.startingEnergy}</strong><button id="open-build">BUILD / B</button><small class="wallet-purpose">TOWERS ONLY · THIS RUN</small><small id="wave-budget"></small><small id="skill-reward">Good shots earn reinforcements.</small></div><div class="build-guide"><strong>BUILD YOUR DEFENSE</strong><span>Spend energy on coverage, control or crowd damage. Towers last for this run.</span><button id="launch-wave" class="primary">START WAVE 1 →</button></div><div class="build-options"></div>`;
+  root.innerHTML = `<div class="build-wallet"><span>BUILD ENERGY</span><strong id="energy-value">${ECONOMY.startingEnergy}</strong><button id="open-build">BUILD / B</button><small class="wallet-purpose">TOWERS ONLY · THIS RUN</small><small id="wave-budget"></small><small id="skill-reward">Good shots earn reinforcements.</small></div><div class="build-guide"><strong>BUILD YOUR DEFENSE</strong><span>Enemies only come through the red gates. Cover them with towers; they last for this run.</span><button id="launch-wave" class="primary">START WAVE 1 →</button></div><div class="build-options"></div>`;
   document.querySelector(".notebook").append(root);
   const arena = document.querySelector("#arena");
   arena.addEventListener("pointermove", (e) => {

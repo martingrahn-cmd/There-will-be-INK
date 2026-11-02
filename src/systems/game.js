@@ -7,6 +7,21 @@ export const WAVE_DURATION = 35;
 // Fixed playfield half-extents. The renderer letterboxes around it, so spawn
 // distance and tower space are the same on every screen.
 export const ARENA = Object.freeze({ x: 615, y: 345 });
+// Enemies enter through a few gates on the arena edge, more in later waves.
+export const GATE_COUNTS = [2, 2, 3, 3, 4];
+// Opening order of the four layout slots around the arena.
+const GATE_ORDER = [0, 2, 1, 3];
+// Angular width of a gate opening, in radians.
+export const GATE_SPREAD = 0.18;
+// Where a ray from the base at this angle crosses the arena edge.
+export function edgePoint(angle, bounds, pad = 0) {
+  const scale =
+    Math.min(
+      bounds.x / Math.max(0.001, Math.abs(Math.cos(angle))),
+      bounds.y / Math.max(0.001, Math.abs(Math.sin(angle))),
+    ) + pad;
+  return { x: Math.cos(angle) * scale, y: Math.sin(angle) * scale };
+}
 export const ENEMY_TYPES = {
   exploder: { health: 28, speed: 40, radius: 18, damage: 6, score: 25 },
   swarmer: { health: 19, speed: 44, radius: 12, damage: 5, score: 10 },
@@ -82,6 +97,24 @@ export class WaveSystem {
     this.elapsed = 0;
     this.spawnTimer = 0;
     this.duration = WAVE_DURATION;
+    this.layout = [];
+    this.gates = [];
+  }
+  // Gates stay open for the whole run and later waves open more, so towers
+  // built for a gate keep paying off. A new run gets a new layout: even
+  // spacing with jitter, where the first two gates face each other.
+  plan(number, rng) {
+    if (number === 1) {
+      const step = (Math.PI * 2) / GATE_ORDER.length,
+        base = rng() * Math.PI * 2;
+      this.layout = GATE_ORDER.map(
+        (i) => base + i * step + (rng() - 0.5) * step * 0.5,
+      );
+    }
+    this.gates = this.layout.slice(
+      0,
+      GATE_COUNTS[Math.min(number, GATE_COUNTS.length) - 1],
+    );
   }
   next() {
     this.number++;
@@ -627,6 +660,7 @@ export class CombatSystem {
     this.enemies = new EnemySystem();
     this.weapons = new WeaponSystem();
     this.wave = new WaveSystem();
+    this.wave.plan(1, this.rng);
     this.score = new ScoreSystem();
     this.upgrades = new UpgradeSystem(this.rng);
     this.powerups = new PowerupSystem();
@@ -661,15 +695,13 @@ export class CombatSystem {
             (e) => e.health > 0 && Math.hypot(e.x, e.y) > 230,
           )
         : null;
-    const base = ENEMY_TYPES[type],
+    const gates = this.wave.gates,
+      base = ENEMY_TYPES[type],
       a = companion
         ? Math.atan2(companion.y, companion.x) + (this.rng() - 0.5) * 0.2
-        : this.rng() * Math.PI * 2,
-      scale =
-        Math.min(
-          this.bounds.x / Math.max(0.001, Math.abs(Math.cos(a))),
-          this.bounds.y / Math.max(0.001, Math.abs(Math.sin(a))),
-        ) + 25;
+        : gates[Math.floor(this.rng() * gates.length)] +
+          (this.rng() - 0.5) * GATE_SPREAD,
+      spawn = edgePoint(a, this.bounds, 25);
     const lateWave = LATE_DEFENSE_WAVES[this.wave.number];
     const eliteChance = lateWave
       ? lateWave.eliteChance
@@ -682,8 +714,8 @@ export class CombatSystem {
       ...base,
       id: ++this.enemies.nextId,
       type,
-      x: Math.cos(a) * scale,
-      y: Math.sin(a) * scale,
+      x: spawn.x,
+      y: spawn.y,
       health:
         base.health * healthScale * (lateWave?.health ?? 1) * (elite ? 2 : 1),
       maxHealth:
@@ -904,6 +936,8 @@ export class CombatSystem {
       this.damageFlash = 0;
       this.state = "clearing";
       this.clearTimer = 2;
+      // Open the next wave's gates now, so they can be planned around while building.
+      this.wave.plan(this.wave.number + 1, this.rng);
       this.emit("waveComplete");
     }
   }

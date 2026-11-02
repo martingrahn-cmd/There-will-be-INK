@@ -2,7 +2,7 @@ import { TOWERS } from "./systems/defense.js";
 import { POWERUPS } from "./systems/powerup-types.js";
 import * as THREE from "three";
 import { EffectsSystem } from "./systems/effects.js";
-import { ARENA } from "./systems/game.js";
+import { ARENA, GATE_COUNTS, GATE_SPREAD, edgePoint } from "./systems/game.js";
 const INK = "#263f54",
   RED = "#b84f3e";
 // The visible playfield: the arena plus the 25-unit spawn margin. Spare screen
@@ -661,6 +661,66 @@ export class GameRenderer {
     this.renderer.render(this.scene, this.camera);
     this.drawOverlay(g);
   }
+  // Torn openings in the page edge with arrows pointing at the base. While
+  // building between waves, gates that open for the next wave are marked new.
+  drawGates(g) {
+    const c = this.ctx,
+      upcoming = g.state === "building" && g.defense.resumeState === "ready",
+      open = GATE_COUNTS[g.wave.number - 1] ?? g.wave.gates.length,
+      pulse = 0.55 + Math.sin(g.time * 4) * 0.15;
+    for (const [i, a] of g.wave.gates.entries()) {
+      const from = edgePoint(a - GATE_SPREAD / 2, g.bounds),
+        to = edgePoint(a + GATE_SPREAD / 2, g.bounds),
+        mid = edgePoint(a, g.bounds),
+        len = Math.hypot(mid.x, mid.y),
+        nx = -mid.x / len,
+        ny = -mid.y / len;
+      c.save();
+      c.globalAlpha = g.state === "playing" ? pulse : 1;
+      c.strokeStyle = RED;
+      c.lineWidth = 3;
+      c.lineJoin = "round";
+      c.beginPath();
+      for (let i = 0; i <= 8; i++) {
+        const t = i / 8,
+          jag = i % 2 ? 7 : -3;
+        c.lineTo(
+          from.x + (to.x - from.x) * t + nx * jag,
+          from.y + (to.y - from.y) * t + ny * jag,
+        );
+      }
+      c.stroke();
+      c.lineWidth = 2.2;
+      for (const d of [34, 60]) {
+        const x = mid.x + nx * d,
+          y = mid.y + ny * d;
+        c.beginPath();
+        c.moveTo(x - nx * 12 - ny * 12, y - ny * 12 + nx * 12);
+        c.lineTo(x, y);
+        c.lineTo(x - nx * 12 + ny * 12, y - ny * 12 - nx * 12);
+        c.stroke();
+      }
+      if (g.state === "building") {
+        // Enemies walk straight at the base, so show the lane they will use.
+        c.globalAlpha = 0.35;
+        c.lineWidth = 1.5;
+        c.setLineDash([6, 9]);
+        c.beginPath();
+        c.moveTo(mid.x + nx * 110, mid.y + ny * 110);
+        c.lineTo(-nx * 90, -ny * 90);
+        c.stroke();
+        c.setLineDash([]);
+        c.globalAlpha = 1;
+        c.translate(mid.x + nx * 95, mid.y + ny * 95);
+        c.scale(1, -1);
+        c.fillStyle = RED;
+        c.textAlign = "center";
+        c.font = "bold 12px monospace";
+        c.fillText(upcoming && i >= open ? "NEW GATE" : "GATE", 0, 4);
+      }
+      c.restore();
+    }
+  }
   drawOverlay(g) {
     const c = this.ctx,
       dpr = devicePixelRatio;
@@ -674,6 +734,7 @@ export class GameRenderer {
     c.rect(-VIEW_WIDTH / 2, -VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT);
     c.clip();
     c.lineWidth = 1.2;
+    if (["playing", "building", "paused"].includes(g.state)) this.drawGates(g);
     if (g.defense) {
       const d = g.defense;
       if (g.state === "building" && d.placing && d.preview) {

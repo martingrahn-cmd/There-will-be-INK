@@ -6,6 +6,8 @@ import {
   ENEMY_TYPES,
   ARENA,
   EVENT_CAP,
+  GATE_COUNTS,
+  GATE_SPREAD,
 } from "./game.js";
 function makeGame() {
   const g = new CombatSystem({ rng: () => 0.5 });
@@ -807,4 +809,73 @@ test("a flooded frame drops only cosmetic events and counts them", () => {
   );
   g.start();
   assert.equal(g.droppedEvents, 0);
+});
+
+function seeded(seed) {
+  return () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+}
+// Smallest angle between two directions, in radians.
+function angleGap(a, b) {
+  const d = Math.abs(a - b) % (Math.PI * 2);
+  return Math.min(d, Math.PI * 2 - d);
+}
+test("enemies enter only through the wave's gates", () => {
+  const g = new CombatSystem({ rng: seeded(11) });
+  g.start();
+  assert.equal(g.wave.gates.length, GATE_COUNTS[0]);
+  g.defense.next(g);
+  for (let i = 0; i < 300; i++) g.spawnEnemy("swarmer");
+  const used = new Set();
+  for (const e of g.enemies.items) {
+    const a = Math.atan2(e.y, e.x),
+      gaps = g.wave.gates.map((gate) => angleGap(a, gate));
+    assert.ok(Math.min(...gaps) <= GATE_SPREAD / 2 + 1e-9);
+    used.add(gaps.indexOf(Math.min(...gaps)));
+    assert.ok(
+      Math.abs(e.x) >= ARENA.x - 0.001 || Math.abs(e.y) >= ARENA.y - 0.001,
+    );
+  }
+  assert.equal(used.size, g.wave.gates.length);
+});
+test("gates stay open for the run, stay apart and open before the wave they serve", () => {
+  for (let seed = 1; seed <= 40; seed++) {
+    const g = new CombatSystem({ rng: seeded(seed) });
+    let previous = [];
+    for (let wave = 1; wave <= 5; wave++) {
+      g.wave.plan(wave, g.rng);
+      const gates = g.wave.gates;
+      assert.equal(gates.length, GATE_COUNTS[wave - 1]);
+      assert.deepEqual(gates.slice(0, previous.length), previous);
+      for (let i = 0; i < gates.length; i++)
+        for (let j = i + 1; j < gates.length; j++)
+          assert.ok(angleGap(gates[i], gates[j]) >= Math.PI / 4 - 1e-9);
+      previous = [...gates];
+    }
+    assert.ok(angleGap(previous[0], previous[1]) >= (Math.PI * 3) / 4 - 1e-9);
+  }
+  const g = new CombatSystem({ rng: seeded(5) });
+  g.start();
+  const first = [...g.wave.gates];
+  g.defense.next(g);
+  g.wave.spawnTimer = 999;
+  g.wave.elapsed = g.wave.duration;
+  g.update(1 / 60);
+  assert.equal(g.state, "clearing");
+  g.wave.plan(3, g.rng);
+  assert.deepEqual(g.wave.gates.slice(0, 2), first);
+  g.wave.plan(2, g.rng);
+  assert.deepEqual(g.wave.gates, first);
+  const next = [...g.wave.gates];
+  finishClear(g);
+  g.choose(g.choices[0].id);
+  assert.equal(g.state, "building");
+  assert.deepEqual(g.wave.gates, next);
+  g.defense.next(g);
+  assert.deepEqual(g.wave.gates, next);
+  g.start();
+  assert.equal(g.wave.gates.length, GATE_COUNTS[0]);
+  assert.notDeepEqual(g.wave.gates, first);
 });

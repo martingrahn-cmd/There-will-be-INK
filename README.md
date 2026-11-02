@@ -6,12 +6,13 @@ Rollfördelningen för systemen finns i [Systemkartan](docs/SYSTEMS.md): **torn 
 
 ## Bemannat tower defense
 
-Tower defense är spelets enda läge. Fiender kommer från alla håll mot huvudkanonen. Hjälptorn placeras fritt på pappret. Överlev fem vågor med 35 sekunders spawning per våg, följt av utrensning. Efter femte vågen visas en segerbild.
+Tower defense är spelets enda läge. Fiender kommer bara genom röda ingångar i papperskanten och går rakt mot huvudkanonen. Hjälptorn placeras fritt på pappret. Överlev fem vågor med 35 sekunders spawning per våg, följt av utrensning. Efter femte vågen visas en segerbild.
 
 Vågorna har cirka 142, 195, 256, 323 och 398 fiender för att möta spelarens uppgraderingar under omgången, med 35 % högre spawn-takt under de sista tio sekunderna. Fiendernas hälsa och fart ökar varje våg; elitfiender börjar dyka upp i våg 3 och blir vanligare mot finalen.
 
 Våg 4–5 har en tyngre fiendemix: 28/34 % brutes, 14/18 % skyttar (högst 6/8 samtidigt) och 26/28 % laddare. När skyttetaket är nått kommer laddare i deras ställe. Utöver den vanliga skalningen får fienderna 45/110 % mer hälsa och 12/24 % högre gångfart; elitchansen är 20/30 %. Våg 1–2 behåller sin tidigare grundbalans. Antalet vanliga fiender och energibudgeten är oförändrade, så slutvågorna kräver mer aktivt försvar utan att finansiera fler torn.
 
+- **Ingångar:** våg 1–2 har två ingångar mitt emot varandra, våg 3–4 tre och våg 5 fyra. Ingångarna ligger kvar hela omgången, så torn vid en ingång fortsätter göra nytta. Varje ny omgång får en ny placering. I byggläget visar streckade linjer fiendernas väg in mot basen, och ingångar som öppnas inför nästa våg märks NEW GATE. Bossarna kommer fortfarande uppifrån.
 - Starta med 150 byggenergi: välj en torntyp längst ner och klicka på pappret för att placera ditt första torn. Förhandsvisningen visar räckvidd; grönt betyder giltig plats.
 - Automatkanon kostar 120, bromsfält 140 och granatkastare 150 energi. Uppgraderingar kostar 120 respektive 200; max nivå 3.
 - **B** öppnar byggläget och pausar striden. Välj torntyp och klicka för att bygga; klicka på ett befintligt torn för att uppgradera, sedan återuppta. Mellan vågor startar du nästa våg när du är redo.
