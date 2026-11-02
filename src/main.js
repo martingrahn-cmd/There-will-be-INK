@@ -232,11 +232,12 @@ window.addEventListener("mouseup", (e) => {
 $("#arena").addEventListener("contextmenu", (e) => e.preventDefault());
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
-    e.preventDefault();
+    // In combat Space fires the shockwave; in menus it activates the focused button.
     if (game.state === "playing") {
+      e.preventDefault();
       input.pulse = true;
       game.weapons.pulse(game);
-    }
+    } else if (!(e.target instanceof HTMLButtonElement)) e.preventDefault();
   }
   if (e.code === "Escape" && !e.repeat) {
     if (game.state === "workshop") game.state = workshopReturn;

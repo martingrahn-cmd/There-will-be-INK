@@ -771,3 +771,17 @@ test("the arena has fixed bounds and enemies spawn just outside it", () => {
   g.start();
   assert.deepEqual(g.bounds, ARENA);
 });
+test("nuke kills pay ordinary kill energy but no skill bonuses", () => {
+  const g = defenseGame();
+  g.defense.next(g);
+  g.wave.spawnTimer = 999;
+  const charger = enemy(g, "charger", 200, 0);
+  charger.phase = "tell";
+  enemy(g, "shooter", -200, 0);
+  const energy = g.defense.energy;
+  g.powerups.activate({ type: "nuke", life: 1 }, g);
+  assert.equal(g.enemies.items.filter((e) => e.health > 0).length, 0);
+  assert.equal(g.defense.energy, energy + 2);
+  assert.equal(g.defense.skillEnergy, 0);
+  assert.equal(g.defense.waveSkillEnergy, 0);
+});

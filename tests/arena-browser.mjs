@@ -26,6 +26,14 @@ try {
   await page.keyboard.press("Escape");
   assert.equal(await state(), "playing");
 
+  // Space activates the focused pause-menu button instead of being swallowed.
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "BACK TO THE MESS" }),
+  ).toBeFocused();
+  await page.keyboard.press("Space");
+  assert.equal(await state(), "playing");
+
   // The arena keeps its size on every screen shape; the pointer still maps
   // screen positions onto it.
   const arena = await page.evaluate(() => ({ ...window.__doodle.game.bounds }));
@@ -67,7 +75,7 @@ try {
   await page.screenshot({ path: "artifacts/arena-wide.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "Esc in build mode and fixed arena size across viewports passed.",
+    "Esc in build mode, Space on menu buttons and fixed arena size across viewports passed.",
   );
 } finally {
   await browser.close();

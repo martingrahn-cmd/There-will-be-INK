@@ -574,7 +574,13 @@ export class PowerupSystem {
       g.health = Math.min(g.stats.maxHealth, g.health + 35);
     else if (p.type === "nuke") {
       for (const e of [...g.enemies.items])
-        g.damage(e, e.boss ? Math.min(600, e.maxHealth * 0.2) : 99999);
+        // A pickup is not a skill shot: no charge/silence bonuses from nuke kills.
+        g.damage(
+          e,
+          e.boss ? Math.min(600, e.maxHealth * 0.2) : 99999,
+          0,
+          false,
+        );
       g.enemyBullets = [];
       g.emit("nuke", { x: 0, y: 0, radius: 900 });
     } else g.buffs[p.type] = POWERUPS[p.type].duration;

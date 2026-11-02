@@ -48,7 +48,7 @@ npm run dev
 - Vänster musknapp: håll inne för att skjuta.
 - Höger musknapp: granatkastare mot siktet, 4,5 sekunders grundladdning.
 - Mellanslag: chockvåg, 22 sekunders grundladdning.
-- Esc: pausa/fortsätt. Spelet pausar också när fönstret tappar fokus.
+- Esc: pausa/fortsätt. I byggläget under en våg återupptar Esc striden. Autopaus när fönstret tappar fokus är avstängd som standard och slås på i pausmenyn.
 - 1–3 eller klick: välj uppgradering mellan vågor.
 - Klicka på notsymbolen för att slå av/på ljud. Valfritt rytmlager finns i pausmenyn.
 
