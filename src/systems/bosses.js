@@ -25,7 +25,7 @@ export class BossSystem {
   }
   update(g) {
     const spec = BOSS_WAVES[g.wave.number];
-    if (!g.defense || !spec || this.spawnedWaves.has(g.wave.number)) return;
+    if (!spec || this.spawnedWaves.has(g.wave.number)) return;
     if (
       g.wave.elapsed >= spec.at - 3 &&
       !this.announcedWaves.has(g.wave.number)

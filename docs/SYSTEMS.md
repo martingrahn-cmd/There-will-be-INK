@@ -58,5 +58,3 @@ Aktuella priser, belöningstak och bossvärden finns i README och respektive sys
 ## Gräns för nästa ändring
 
 Ange först vilket av systemen ändringen hör till, vilket beslut den ska skapa och hur länge effekten varar. Ett nytt system behövs först när en viktig spelupplevelse inte ryms i de befintliga rollerna.
-
-Den äldre survival-logiken behåller sina ursprungliga kort och vapeninteraktioner. Den ingår inte i den här rollfördelningen.

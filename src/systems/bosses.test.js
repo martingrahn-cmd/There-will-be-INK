@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { CombatSystem } from "./game.js";
 import { BOSS_WAVES } from "./bosses.js";
 function game(wave = 3) {
-  const g = new CombatSystem({ mode: "defense", rng: () => 0.5 });
+  const g = new CombatSystem({ rng: () => 0.5 });
   g.start();
   g.defense.next(g);
   g.wave.number = wave;
@@ -40,12 +40,6 @@ test("bosses warn, spawn once in waves three and five, and wait for capacity", (
     assert.equal(g.enemies.items.length, 1);
     assert.equal(g.enemies.items[0].name, BOSS_WAVES[wave].name);
   }
-  const survival = new CombatSystem();
-  survival.start();
-  survival.wave.number = 3;
-  survival.wave.elapsed = 30;
-  survival.bosses.update(survival);
-  assert.equal(survival.enemies.items.length, 0);
 });
 test("boss reaches firing range, telegraphs shots, enrages once and takes extra damage while reloading", () => {
   const g = game(),

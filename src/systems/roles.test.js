@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CombatSystem } from "./game.js";
 function setup(tower) {
-  const g = new CombatSystem({ mode: "defense", rng: () => 0.5 });
+  const g = new CombatSystem({ rng: () => 0.5 });
   g.start();
   if (tower) g.defense.place(g, tower, 150, 0);
   g.defense.next(g);

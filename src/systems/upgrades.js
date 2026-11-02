@@ -1,15 +1,17 @@
 export const UPGRADES = [
   {
     id: "minigun",
-    tag: "FEED SYSTEM",
+    tag: "SPRAY FIRE",
     title: "More lead. Less mercy.",
     name: "Minigun",
     icon: "≋",
-    description: "Fire 30% faster. A little less accuracy. A lot more ink.",
+    description:
+      "50% faster main-gun fire, 15% less damage per bullet and a wider spread.",
     max: 3,
     apply: (s) => {
-      s.fireRate *= 1.3;
-      s.spread += 0.015;
+      s.fireRate *= 1.5;
+      s.damage *= 0.85;
+      s.spread += 0.035;
     },
   },
   {
@@ -64,19 +66,6 @@ export const UPGRADES = [
     },
   },
   {
-    id: "damage",
-    tag: "HEAVY CALIBER",
-    title: "Leave a bigger mark.",
-    name: "Heavy rounds",
-    icon: "●",
-    description: "35% more bullet damage and much stronger knockback.",
-    max: Infinity,
-    apply: (s) => {
-      s.damage *= 1.35;
-      s.knockback += 5;
-    },
-  },
-  {
     id: "shrapnel",
     tag: "CHAIN REACTION",
     title: "Parting gifts.",
@@ -86,18 +75,6 @@ export const UPGRADES = [
     max: 1,
     apply: (s) => {
       s.shrapnel = true;
-    },
-  },
-  {
-    id: "repair",
-    tag: "FIELD REPAIR",
-    title: "Tape fixes everything.",
-    name: "Reinforced hull",
-    icon: "+",
-    description: "Repair 40 health and increase maximum health by 25.",
-    max: Infinity,
-    apply: (s) => {
-      s.maxHealth += 25;
     },
   },
   {
@@ -137,54 +114,22 @@ export const UPGRADES = [
       s.blastRadius *= 1.3;
     },
   },
-  {
-    id: "cooling",
-    tag: "SUPPORT SYSTEM",
-    title: "Keep it coming.",
-    name: "Quick loader",
-    icon: "↻",
-    description: "Mortar reloads 30% faster. Repair 15 health.",
-    max: Infinity,
-    apply: (s) => {
-      s.mortarCooldown *= 0.7;
-    },
-  },
 ];
+// What each card changes, shown on the card.
+const SCOPES = {
+  mortar: "YOUR MORTAR",
+  pulse: "YOUR SHOCKWAVE",
+  reach: "YOUR BLASTS",
+  shrapnel: "YOUR KILLS",
+};
 export class UpgradeSystem {
-  constructor(rng = Math.random, mode = "survival") {
+  constructor(rng = Math.random) {
     this.rng = rng;
-    // Defense cards shape the current loadout; the workshop owns baseline stats.
-    this.catalog =
-      mode === "defense"
-        ? UPGRADES.filter(
-            (u) => !["damage", "repair", "cooling"].includes(u.id),
-          ).map((u) =>
-            u.id === "minigun"
-              ? {
-                  ...u,
-                  tag: "SPRAY FIRE",
-                  description:
-                    "50% faster main-gun fire, 15% less damage per bullet and a wider spread.",
-                  apply: (s) => {
-                    s.fireRate *= 1.5;
-                    s.damage *= 0.85;
-                    s.spread += 0.035;
-                  },
-                }
-              : u,
-          )
-        : UPGRADES;
-    if (mode === "defense")
-      this.catalog = this.catalog.map((u) => ({
-        ...u,
-        scope:
-          {
-            mortar: "YOUR MORTAR",
-            pulse: "YOUR SHOCKWAVE",
-            reach: "YOUR BLASTS",
-            shrapnel: "YOUR KILLS",
-          }[u.id] || "MAIN GUN",
-      }));
+    // Cards shape the current loadout; the workshop owns baseline stats.
+    this.catalog = UPGRADES.map((u) => ({
+      ...u,
+      scope: SCOPES[u.id] || "MAIN GUN",
+    }));
     this.owned = {};
   }
   choices(opening = false) {

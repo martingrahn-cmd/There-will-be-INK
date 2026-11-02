@@ -3,7 +3,7 @@ import { UpgradeSystem } from "./upgrades.js";
 import { POWERUPS } from "./powerup-types.js";
 import { BossSystem } from "./bosses.js";
 import { ProgressionSystem } from "./progression.js";
-export const WAVE_DURATION = 45;
+export const WAVE_DURATION = 35;
 // Fixed playfield half-extents. The renderer letterboxes around it, so spawn
 // distance and tower space are the same on every screen.
 export const ARENA = Object.freeze({ x: 615, y: 345 });
@@ -95,54 +95,48 @@ export class WaveSystem {
     this.elapsed += dt;
     this.spawnTimer -= dt;
     if (this.spawning && this.spawnTimer <= 0) {
-      // Defense ends after five waves, so its pressure must ramp up earlier.
-      const spawnRate = game.defense
-        ? (2 + this.number * 0.8 + this.elapsed * 0.025) *
-          (1.15 + (this.number - 1) * 0.12) *
-          (this.elapsed >= this.duration - 10 ? 1.35 : 1)
-        : 1.8 + this.number * 0.55 + Math.min(this.elapsed, 40) * 0.022;
+      // A run ends after five waves, so pressure must ramp up early.
+      const spawnRate =
+        (2 + this.number * 0.8 + this.elapsed * 0.025) *
+        (1.15 + (this.number - 1) * 0.12) *
+        (this.elapsed >= this.duration - 10 ? 1.35 : 1);
       this.spawnTimer += 1 / spawnRate;
-      const batch = !game.defense && this.number >= 6 ? 2 : 1;
-      const lateWave = game.defense && LATE_DEFENSE_WAVES[this.number];
-      for (let i = 0; i < batch; i++) {
-        const r = game.rng();
-        const shooterChance =
-          this.number === 3 ? 0.04 : this.number === 4 ? 0.08 : 0.12;
-        const shooterCap =
-          lateWave?.shooterCap ?? Math.min(8, Math.max(2, this.number - 1));
-        const shooters = game.enemies.items.filter(
-          (e) => e.type === "shooter" && e.health > 0,
-        ).length;
-        let type =
-          this.number >= 3 && r < 0.12
-            ? r < shooterChance &&
-              shooters < shooterCap &&
-              (this.number !== 3 || this.elapsed >= 8)
-              ? "shooter"
-              : "swarmer"
-            : this.number >= 2 && r < 0.26
-              ? "brute"
-              : r < (this.number === 1 ? 0.25 : 0.45)
-                ? "charger"
-                : "swarmer";
-        if (lateWave) {
-          if (r < lateWave.shooterChance)
-            type = shooters < shooterCap ? "shooter" : "charger";
-          else if (r < lateWave.shooterChance + lateWave.bruteChance)
-            type = "brute";
-          else if (
-            r <
-            lateWave.shooterChance +
-              lateWave.bruteChance +
-              lateWave.chargerChance
-          )
-            type = "charger";
-          else type = "swarmer";
-        }
-        if (type === "swarmer" && r >= 0.9 && r < 0.98 && this.elapsed >= 6)
-          type = "exploder";
-        game.spawnEnemy(type);
+      const lateWave = LATE_DEFENSE_WAVES[this.number];
+      const r = game.rng();
+      const shooterChance =
+        this.number === 3 ? 0.04 : this.number === 4 ? 0.08 : 0.12;
+      const shooterCap =
+        lateWave?.shooterCap ?? Math.min(8, Math.max(2, this.number - 1));
+      const shooters = game.enemies.items.filter(
+        (e) => e.type === "shooter" && e.health > 0,
+      ).length;
+      let type =
+        this.number >= 3 && r < 0.12
+          ? r < shooterChance &&
+            shooters < shooterCap &&
+            (this.number !== 3 || this.elapsed >= 8)
+            ? "shooter"
+            : "swarmer"
+          : this.number >= 2 && r < 0.26
+            ? "brute"
+            : r < (this.number === 1 ? 0.25 : 0.45)
+              ? "charger"
+              : "swarmer";
+      if (lateWave) {
+        if (r < lateWave.shooterChance)
+          type = shooters < shooterCap ? "shooter" : "charger";
+        else if (r < lateWave.shooterChance + lateWave.bruteChance)
+          type = "brute";
+        else if (
+          r <
+          lateWave.shooterChance + lateWave.bruteChance + lateWave.chargerChance
+        )
+          type = "charger";
+        else type = "swarmer";
       }
+      if (type === "swarmer" && r >= 0.9 && r < 0.98 && this.elapsed >= 6)
+        type = "exploder";
+      game.spawnEnemy(type);
     }
   }
 }
@@ -201,19 +195,12 @@ export class EnemySystem {
           e.timer -= dt;
           if (e.timer <= 0) {
             e.phase = "dash";
-            e.dx = ax;
-            e.dy = ay;
             e.timer = 1.25;
           }
         }
         if (e.phase === "dash") {
           e.timer -= dt;
-          if (g.defense) speed = 160;
-          else {
-            e.x += e.dx * 230 * dt;
-            e.y += e.dy * 230 * dt;
-            speed = 0;
-          }
+          speed = 160;
           if (e.timer <= 0) e.phase = "walk";
         }
       }
@@ -340,21 +327,20 @@ export class WeaponSystem {
     this.novaTimer = Math.max(0, this.novaTimer - dt);
     const target = this.nearest(g, this.sentry.x, this.sentry.y);
     // Temporary support has its own payload, separate from main-gun builds.
-    const supportDamage = g.defense ? 14 : g.stats.damage;
-    const damageBoost = !g.defense && g.buffs.quad > 0 ? 4 : 1;
+    const supportDamage = 14;
     if (target && g.buffs.sentry > 0) {
       const a = Math.atan2(target.y - this.sentry.y, target.x - this.sentry.x);
       this.sentry.angle = a;
       if (this.sentryTimer <= 0) {
-        this.sentryTimer = !g.defense && g.buffs.overdrive > 0 ? 0.075 : 0.15;
+        this.sentryTimer = 0.15;
         this.bullet({
           x: this.sentry.x + Math.cos(a) * 22,
           y: this.sentry.y + Math.sin(a) * 22,
           vx: Math.cos(a) * 750,
           vy: Math.sin(a) * 750,
-          damage: supportDamage * 1.2 * damageBoost,
+          damage: supportDamage * 1.2,
           support: true,
-          pierce: g.defense ? 0 : g.stats.pierce,
+          pierce: 0,
         });
         g.emit("supportShot", { x: this.sentry.x, y: this.sentry.y });
       }
@@ -368,7 +354,7 @@ export class WeaponSystem {
           y: Math.sin(a + i * 0.7) * 48,
           vx: Math.cos(a + i * 0.7) * 360,
           vy: Math.sin(a + i * 0.7) * 360,
-          damage: supportDamage * 2 * damageBoost,
+          damage: supportDamage * 2,
           homing: true,
           support: true,
           target,
@@ -385,7 +371,7 @@ export class WeaponSystem {
           y: Math.sin(a) * 50,
           vx: Math.cos(a) * 520,
           vy: Math.sin(a) * 520,
-          damage: supportDamage * 1.5 * damageBoost,
+          damage: supportDamage * 1.5,
           pierce: 1,
           support: true,
         });
@@ -467,25 +453,17 @@ export class WeaponSystem {
         b.hit.add(e.id);
         g.damage(e, b.damage, 0, !b.support);
         if (b.homing) {
-          g.explode(
-            e.x,
-            e.y,
-            45 * (g.defense ? 1 : g.stats.blastRadius),
-            b.damage * 0.6,
-            "seeker",
-            0,
-            !g.defense,
-          );
+          g.explode(e.x, e.y, 45, b.damage * 0.6, "seeker", 0, false);
           b.life = 0;
           break;
         }
         const len = Math.hypot(b.vx, b.vy) || 1;
         if (!e.boss) {
-          const knockback = g.defense && b.support ? 3 : g.stats.knockback;
+          const knockback = b.support ? 3 : g.stats.knockback;
           e.x += (b.vx / len) * knockback;
           e.y += (b.vy / len) * knockback;
         }
-        if (g.stats.explosive && !b.fragment && (!g.defense || !b.support))
+        if (g.stats.explosive && !b.fragment && !b.support)
           g.explode(
             e.x,
             e.y,
@@ -610,10 +588,8 @@ export class PowerupSystem {
 export class CombatSystem {
   constructor({
     rng = Math.random,
-    mode = "survival",
     progression = new ProgressionSystem(),
   } = {}) {
-    this.mode = mode;
     this.rng = rng;
     this.progression = progression;
     this.reset();
@@ -636,8 +612,8 @@ export class CombatSystem {
       blastRadius: 1,
       cluster: false,
     };
-    this.defense = this.mode === "defense" ? new DefenseSystem() : null;
-    if (this.defense) this.progression.apply(this.stats);
+    this.defense = new DefenseSystem();
+    this.progression.apply(this.stats);
     this.runScrap = 0;
     this.bosses = new BossSystem();
     this.pendingBlasts = [];
@@ -652,7 +628,7 @@ export class CombatSystem {
     this.weapons = new WeaponSystem();
     this.wave = new WaveSystem();
     this.score = new ScoreSystem();
-    this.upgrades = new UpgradeSystem(this.rng, this.mode);
+    this.upgrades = new UpgradeSystem(this.rng);
     this.powerups = new PowerupSystem();
     this.buffs = Object.fromEntries(
       Object.entries(POWERUPS)
@@ -663,21 +639,12 @@ export class CombatSystem {
     this.choices = [];
     this.damageFlash = 0;
     this.bounds = { ...ARENA };
-    if (this.defense) {
-      this.wave.duration = 35;
-      this.defense.layout(this.bounds);
-    }
+    this.defense.layout(this.bounds);
   }
   start() {
     this.reset();
-    if (this.defense) {
-      this.state = "ready";
-      this.defense.open(this);
-    } else {
-      this.state = "playing";
-      this.wave.next();
-      this.emit("wave", { number: 1 });
-    }
+    this.state = "ready";
+    this.defense.open(this);
   }
   emit(type, data = {}) {
     if (this.events.length >= EVENT_CAP && BULK_EVENTS.has(type)) {
@@ -703,20 +670,14 @@ export class CombatSystem {
           this.bounds.x / Math.max(0.001, Math.abs(Math.cos(a))),
           this.bounds.y / Math.max(0.001, Math.abs(Math.sin(a))),
         ) + 25;
-    const lateWave = this.defense && LATE_DEFENSE_WAVES[this.wave.number];
+    const lateWave = LATE_DEFENSE_WAVES[this.wave.number];
     const eliteChance = lateWave
       ? lateWave.eliteChance
-      : this.defense
-        ? this.wave.number >= 3
-          ? Math.min(0.2, 0.06 + (this.wave.number - 3) * 0.05)
-          : 0
-        : this.wave.number >= 4
-          ? 0.08
-          : 0;
+      : this.wave.number >= 3
+        ? Math.min(0.2, 0.06 + (this.wave.number - 3) * 0.05)
+        : 0;
     const elite = eliteChance > 0 && this.rng() < eliteChance;
-    const healthScale = this.defense
-      ? 1.1 + (this.wave.number - 1) * 0.24
-      : 1 + (this.wave.number - 1) * 0.12;
+    const healthScale = 1.1 + (this.wave.number - 1) * 0.24;
     this.enemies.items.push({
       ...base,
       id: ++this.enemies.nextId,
@@ -729,7 +690,7 @@ export class CombatSystem {
         base.health * healthScale * (lateWave?.health ?? 1) * (elite ? 2 : 1),
       speed:
         base.speed *
-        (1 + Math.min(0.5, this.wave.number * (this.defense ? 0.03 : 0.018))) *
+        (1 + Math.min(0.5, this.wave.number * 0.03)) *
         (lateWave?.speed ?? 1),
       radius: base.radius * (elite ? 1.25 : 1),
       elite,
@@ -754,26 +715,24 @@ export class CombatSystem {
     this.emit("hit", { x: e.x, y: e.y });
     if (e.health <= 0) {
       this.score.kill(e.score);
-      if (this.defense) {
-        if (this.score.kills % 10 === 0) this.earnScrap(1);
-        if (e.boss) {
-          this.earnScrap(e.reward);
-          this.emit("bossDefeated", {
-            name: e.name,
-            reward: e.reward,
-            x: e.x,
-            y: e.y,
-            radius: 150,
-          });
-        }
-        this.defense.reward(ECONOMY.killReward, "KILL");
-        if (player && e.type === "charger" && e.phase === "tell")
-          this.defense.reward(ECONOMY.chargeReward, "CHARGE STOPPED", true);
-        if (player && e.type === "shooter" && !e.hasFired)
-          this.defense.reward(ECONOMY.silenceReward, "SILENCED", true);
-        if (player && chainDepth > 0)
-          this.defense.reward(ECONOMY.chainReward, "CHAIN KILL", true);
+      if (this.score.kills % 10 === 0) this.earnScrap(1);
+      if (e.boss) {
+        this.earnScrap(e.reward);
+        this.emit("bossDefeated", {
+          name: e.name,
+          reward: e.reward,
+          x: e.x,
+          y: e.y,
+          radius: 150,
+        });
       }
+      this.defense.reward(ECONOMY.killReward, "KILL");
+      if (player && e.type === "charger" && e.phase === "tell")
+        this.defense.reward(ECONOMY.chargeReward, "CHARGE STOPPED", true);
+      if (player && e.type === "shooter" && !e.hasFired)
+        this.defense.reward(ECONOMY.silenceReward, "SILENCED", true);
+      if (player && chainDepth > 0)
+        this.defense.reward(ECONOMY.chainReward, "CHAIN KILL", true);
       this.emit("death", {
         x: e.x,
         y: e.y,
@@ -807,7 +766,7 @@ export class CombatSystem {
                 ? "ANNIHILATION"
                 : "INK-CREDIBLE",
         });
-      if (this.stats.shrapnel && (!this.defense || player))
+      if (this.stats.shrapnel && player)
         for (let i = 0; i < 4; i++) {
           const a = this.rng() * Math.PI * 2;
           this.weapons.bullet({
@@ -863,24 +822,12 @@ export class CombatSystem {
       return false;
     const before = this.upgrades.evolved;
     if (!this.upgrades.take(id, this.stats)) return false;
-    this.health = Math.min(
-      this.stats.maxHealth,
-      this.health +
-        (id === "repair" ? 40 : id === "cooling" ? 15 : 0) +
-        (this.defense ? 0 : 10),
-    );
     this.weapons.bullets = [];
     this.enemyBullets = [];
     this.weapons.shells = [];
     this.choices = [];
-    if (this.defense) {
-      this.state = "ready";
-      this.defense.open(this);
-    } else {
-      this.state = "playing";
-      this.wave.next();
-      this.emit("wave", { number: this.wave.number });
-    }
+    this.state = "ready";
+    this.defense.open(this);
     if (!before && this.upgrades.evolved)
       this.emit("evolution", { name: "HELLSTORM" });
     return true;
@@ -908,7 +855,7 @@ export class CombatSystem {
       this.buffs[key] = Math.max(0, this.buffs[key] - dt);
     this.wave.update(dt, this);
     this.bosses.update(this);
-    if (this.defense) this.defense.update(dt, this);
+    this.defense.update(dt, this);
     this.enemies.update(dt, this);
     if (this.state !== "playing") return;
     this.weapons.update(dt, this, input);
@@ -947,22 +894,16 @@ export class CombatSystem {
       !this.enemies.items.some((e) => e.health > 0) &&
       this.pendingBlasts.length === 0
     ) {
-      if (this.defense) {
-        this.earnScrap(8);
-        this.defense.reward(ECONOMY.waveReward, "WAVE CLEAR");
-        this.health = Math.min(this.stats.maxHealth, this.health + 10);
-        this.enemyBullets = [];
-        this.weapons.bullets = [];
-        this.weapons.shells = [];
-        this.defense.shells = [];
-        this.damageFlash = 0;
-        this.state = "clearing";
-        this.clearTimer = 2;
-        this.emit("waveComplete");
-        return;
-      }
-      this.state = "upgrade";
-      this.choices = this.upgrades.choices(this.wave.number === 1);
+      this.earnScrap(8);
+      this.defense.reward(ECONOMY.waveReward, "WAVE CLEAR");
+      this.health = Math.min(this.stats.maxHealth, this.health + 10);
+      this.enemyBullets = [];
+      this.weapons.bullets = [];
+      this.weapons.shells = [];
+      this.defense.shells = [];
+      this.damageFlash = 0;
+      this.state = "clearing";
+      this.clearTimer = 2;
       this.emit("waveComplete");
     }
   }

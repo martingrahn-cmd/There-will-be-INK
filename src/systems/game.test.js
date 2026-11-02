@@ -10,9 +10,13 @@ import {
 function makeGame() {
   const g = new CombatSystem({ rng: () => 0.5 });
   g.start();
+  g.defense.next(g);
   g.wave.spawnTimer = 1000;
   g.events = [];
   return g;
+}
+function finishClear(g) {
+  while (g.state === "clearing") g.update(1 / 30);
 }
 function enemy(g, type, x, y) {
   g.spawnEnemy(type);
@@ -55,14 +59,18 @@ test("a wave must finish spawning and clear all survivors before offering upgrad
   assert.equal(g.state, "playing");
   g.damage(e, 1000);
   g.update(1 / 60);
+  assert.equal(g.state, "clearing");
+  finishClear(g);
   assert.equal(g.state, "upgrade");
   assert.equal(g.choices.length, 3);
   const choice = g.choices[0].id;
   assert.equal(g.choose("invalid"), false);
   assert.equal(g.choose(choice), true);
+  assert.equal(g.state, "building");
+  assert.equal(g.choose(choice), false);
+  g.defense.next(g);
   assert.equal(g.wave.number, 2);
   assert.equal(g.state, "playing");
-  assert.equal(g.choose(choice), false);
 });
 test("the three required upgrades unlock HELLSTORM", () => {
   const g = makeGame();
@@ -71,7 +79,7 @@ test("the three required upgrades unlock HELLSTORM", () => {
   assert.equal(g.upgrades.evolved, true);
   assert.equal(g.stats.pierce, 1);
   assert.equal(g.stats.explosive, 1);
-  assert.equal(g.stats.fireRate, 13);
+  assert.equal(g.stats.fireRate, 15);
 });
 test("pause freezes combat, cooldowns, and wave timer", () => {
   const g = makeGame();
@@ -117,9 +125,10 @@ test("death is terminal until restart, which resets all progression", () => {
   g.update(0.03, { fire: true });
   assert.equal(g.weapons.bullets.length, 0);
   g.start();
+  assert.equal(g.state, "building");
   assert.equal(g.health, 100);
   assert.equal(g.stats.pierce, 0);
-  assert.equal(g.wave.number, 1);
+  assert.equal(g.wave.number, 0);
   assert.equal(g.score.value, 0);
 });
 test("kill chains increase score multiplier and decay without kills", () => {
@@ -130,12 +139,6 @@ test("kill chains increase score multiplier and decay without kills", () => {
   s.update(3);
   assert.equal(s.multiplier, 1);
   assert.equal(s.best, 16);
-});
-test("late survival waves retain three legal upgrade choices after capped upgrades are exhausted", () => {
-  const g = makeGame();
-  for (let i = 0; i < 30; i++)
-    for (const u of g.upgrades.choices()) g.upgrades.take(u.id, g.stats);
-  assert.equal(g.upgrades.choices().length, 3);
 });
 test("wave one reduces chargers without changing later wave composition", () => {
   const g = makeGame();
@@ -161,12 +164,12 @@ test("wave one reduces chargers without changing later wave composition", () => 
   assert.deepEqual(count(1), { charger: 25, swarmer: 75 });
   assert.deepEqual(count(2), { brute: 26, charger: 19, swarmer: 55 });
 });
-test("shorter waves finish spawning at 45 seconds", () => {
+test("waves finish spawning at 35 seconds", () => {
   const g = makeGame();
-  assert.equal(g.wave.duration, 45);
-  g.wave.elapsed = 44.9;
+  assert.equal(g.wave.duration, 35);
+  g.wave.elapsed = 34.9;
   assert.equal(g.wave.spawning, true);
-  g.wave.elapsed = 45;
+  g.wave.elapsed = 35;
   assert.equal(g.wave.spawning, false);
 });
 test("powerups offer a new pickup near expiration without flooding the arena", () => {
@@ -317,6 +320,7 @@ test("the first upgrade always offers three immediate weapon changes", () => {
   const g = makeGame();
   g.wave.elapsed = g.wave.duration;
   g.update(1 / 60);
+  finishClear(g);
   assert.deepEqual(
     g.choices.map((u) => u.id),
     ["double", "explosive", "ricochet"],
@@ -357,10 +361,10 @@ test("wave completion waits for the final ink bomb detonation", () => {
   g.update(1 / 60);
   assert.equal(g.state, "playing");
   for (let i = 0; i < 12; i++) g.update(1 / 60);
-  assert.equal(g.state, "upgrade");
+  assert.equal(g.state, "clearing");
 });
 function defenseGame() {
-  const g = new CombatSystem({ mode: "defense", rng: () => 0.5 });
+  const g = new CombatSystem({ rng: () => 0.5 });
   g.start();
   return g;
 }
@@ -433,7 +437,6 @@ test("wave five needs active defense even with eight cannons and stacked weapon 
   function simulate(active) {
     let seed = 123;
     const g = new CombatSystem({
-      mode: "defense",
       rng: () => {
         seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
         return seed / 4294967296;
@@ -756,7 +759,6 @@ test("escape resumes a wave from build mode instead of pausing it", () => {
 test("the arena has fixed bounds and enemies spawn just outside it", () => {
   let seed = 7;
   const g = new CombatSystem({
-    mode: "defense",
     rng: () => {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
       return seed / 4294967296;

@@ -1,12 +1,12 @@
 # Doodle Defense — There will be INK
 
-Tower-defense-experiment ovanpå en spelbar webbprototyp utifrån `doodle-defense-gdd-v0.1.md`. Fokus: första spelbara milstolpen i avsnitt 18, med några kombinerbara uppgraderingar och power-ups för att pröva eskaleringen.
+Bemannat tower defense som spelbar webbprototyp utifrån `doodle-defense-gdd-v0.1.md`. Fokus: första spelbara milstolpen i avsnitt 18, med några kombinerbara uppgraderingar och power-ups för att pröva eskaleringen.
 
 Rollfördelningen för systemen finns i [Systemkartan](docs/SYSTEMS.md): **torn = strategi, vapenmoddar = omgångens spelstil, verkstad = bättre startvärden, powerups = tillfällig hjälp, poäng = prestation**.
 
-## Aktiv prototyp: bemannat tower defense
+## Bemannat tower defense
 
-Webbgränssnittet startar nu tower-defense-varianten. Fiender kommer från alla håll mot huvudkanonen. Hjälptorn placeras fritt på pappret. Överlev fem vågor med 35 sekunders spawning per våg, följt av utrensning. Efter femte vågen visas en segerbild.
+Tower defense är spelets enda läge. Fiender kommer från alla håll mot huvudkanonen. Hjälptorn placeras fritt på pappret. Överlev fem vågor med 35 sekunders spawning per våg, följt av utrensning. Efter femte vågen visas en segerbild.
 
 Vågorna har cirka 142, 195, 256, 323 och 398 fiender för att möta spelarens uppgraderingar under omgången, med 35 % högre spawn-takt under de sista tio sekunderna. Fiendernas hälsa och fart ökar varje våg; elitfiender börjar dyka upp i våg 3 och blir vanligare mot finalen.
 
@@ -19,7 +19,7 @@ Våg 4–5 har en tyngre fiendemix: 28/34 % brutes, 14/18 % skyttar (högst 6/8 
 - Fokusbyten autopausar inte som standard. Inställningen AUTO-PAUSE ON FOCUS LOSS finns i pausmenyn och sparas lokalt. Esc pausar alltid manuellt.
 - Behåll mus/LMB för huvudkanonen, RMB för granatkastaren och Space för chockvågen.
 - Skjut powerups på banan för tillfällig hjälp, exempelvis Wingman, målsökande raketer, sköld eller Quad Damage. Första droppen kommer efter 2–4 sekunders strid; powerups och deras effekter pausas i byggläget.
-- Efter varje våg visas en två sekunder lång ”Level clear”-animation med vågens belöning. Efter våg 1–4 väljer du sedan en av tre gratis vapenmoddar för den aktuella omgången. Första valet är trippelpipa, explosiva skott eller studsande kulor. Sedan kan du bygga vidare och själv starta nästa våg. Moddarna gäller dina egna vapen resten av omgången. Torn och automatiska powerup-vapen har egna värden; de ärver inte huvudvapnets moddar. Rena skadekort, skrovkort och Quick loader finns endast i den äldre survival-poolen. Minigun ger i tower defense +50 % eldhastighet, −15 % skada per kula och större spridning. Efter våg 5 visas segerbilden. Kameraskakning stoppas i byggläget och övriga pauser, medan visuella effekter klingar av.
+- Efter varje våg visas en två sekunder lång ”Level clear”-animation med vågens belöning. Efter våg 1–4 väljer du sedan en av tre gratis vapenmoddar för den aktuella omgången. Första valet är trippelpipa, explosiva skott eller studsande kulor. Sedan kan du bygga vidare och själv starta nästa våg. Moddarna gäller dina egna vapen resten av omgången. Torn och automatiska powerup-vapen har egna värden; de ärver inte huvudvapnets moddar. Rena skade- och skrovbonusar köps i verkstaden, inte under omgången. Minigun ger +50 % eldhastighet, −15 % skada per kula och större spridning. Efter våg 5 visas segerbilden. Kameraskakning stoppas i byggläget och övriga pauser, medan visuella effekter klingar av.
 
 ## Bossar och roguelite-verkstad
 
@@ -27,7 +27,7 @@ Våg 4–5 har en tyngre fiendemix: 28/34 % brutes, 14/18 % skyttar (högst 6/8 
 - Bossarna stannar på skjutavstånd och varnar före salvor på 3 respektive 5 skott. Vid halva hälsan blir salvorna två skott längre och pauserna kortare. Under omladdningen tar bossen 50 % extra skada. Space rensar fientliga skott inom chockvågens räckvidd. Freeze och Shield fungerar; Nuke skadar bossar men raderar dem inte direkt. Bossar kan inte knuffas bort av kulor.
 - **Scrap** är en separat valuta: 1 per 10 kills, 8 per avklarad våg och 15/30 för miniboss/slutboss. Den sparas direkt och behålls vid förlust och omstart. Byggenergi återställs fortfarande mellan omgångar.
 - **WORKSHOP** finns på startsidan och efter vinst/förlust. Köp förbättringar till nästa omgång: +6 % grundeldhastighet, +8 % grundskada, +10 max-/starthälsa eller 5 % kortare grundladdning för granatkastaren per nivå. Fem nivåer, med priserna 20, 35, 55, 80 och 110 scrap. Procentbonusarna adderas från grundvärdet; vanliga uppgraderingar under omgången läggs ovanpå.
-- Sparas lokalt i samma webbläsare under `doodle-defense-workshop-v1`; ingen kontosynk. Om lagring blockeras fungerar spel och köp under sessionen, och verkstaden visar att sparandet inte fungerar. De permanenta bonusarna gäller endast tower-defense-läget.
+- Sparas lokalt i samma webbläsare under `doodle-defense-workshop-v1`; ingen kontosynk. Om lagring blockeras fungerar spel och köp under sessionen, och verkstaden visar att sparandet inte fungerar.
 
 Starta på porten som används i denna session: `npm run dev -- --port 5174`. Browser-testet använder 5174 som standard; ange `BASE_URL` för en annan adress.
 
@@ -54,14 +54,13 @@ npm run dev
 
 Avsett för dator med mus och tangentbord. Gränssnittet anpassas till små skärmar, men mobilkontroller är inte en färdig del av prototypen.
 
-## Tidigare survival-version
+## Spelets grunder
 
 - Three.js, ortografisk arena, egenritade torn- och fiendesprites, rutat papper och beständiga bläckmärken.
 - Automateld med rekyl, projektiler, träffpartiklar, knockback och syntetiserat ljud. Begränsat antal ljudröster.
 - Röda explosiva bläckbehållare från våg 1: spräng dem bland fiender för kedjereaktioner och bonuspoäng. Explosionerna skadar bara fiender.
-- Svärmare och laddare från våg 1; tunga fiender från våg 2; distansskyttar från våg 3; förstärkta elitfiender från våg 4.
-- 45 sekunders spawning per våg, därefter utrensning innan uppgraderingsval. Oändligt survival-läge med stigande tryck.
-- Tolv uppgraderingstyper och 10 HP reparation mellan vågor. Första valet garanterar Triple Trouble (tre pipor), Boomstick (explosiva skott) eller Pinball Gun (två studsar). Därefter slumpas tre val med nivåtak.
+- Svärmare och laddare från våg 1; tunga fiender från våg 2; distansskyttar och förstärkta elitfiender från våg 3.
+- Nio typer av vapenmoddar. Första valet garanterar Triple Trouble (tre pipor), Boomstick (explosiva skott) eller Pinball Gun (två studsar). Därefter slumpas tre val med nivåtak.
 - Minigun + Piercing + Explosive Ammo ger HELLSTORM. Ricochet, fler pipor, fragment och klustergranater kan kombineras.
 - Skjutbara power-ups: Wingman (automatisk hjälpkanon), Seeker Swarm (målsökande raketer), Ink Nova (360°-salvor), Quad Damage, Overdrive, Shield, Freeze, Repair och Nuke. Första droppen kommer efter 2–4 sekunder; nästa dyker vanligtvis upp strax före föregående effekt tar slut, med varierad tajming och placering. De försvinner efter 11 sekunder.
 - Killstreaks och poängmultiplikator upp till ×16, död/omstart och lokalt sparat personbästa.

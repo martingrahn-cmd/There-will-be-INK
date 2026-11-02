@@ -75,7 +75,6 @@ test("earned scrap survives defeat and reload, while purchased stats apply once 
   const storage = memoryStorage();
   const p = new ProgressionSystem(storage);
   const g = new CombatSystem({
-    mode: "defense",
     progression: p,
     rng: () => 0.5,
   });
@@ -93,7 +92,7 @@ test("earned scrap survives defeat and reload, while purchased stats apply once 
   assert.equal(g.stats.fireRate, 10);
   const reloaded = new ProgressionSystem(storage);
   assert.equal(reloaded.scrap, 0);
-  const next = new CombatSystem({ mode: "defense", progression: reloaded });
+  const next = new CombatSystem({ progression: reloaded });
   next.start();
   assert.ok(Math.abs(next.stats.fireRate - 10.6) < 1e-9);
   next.upgrades.take("minigun", next.stats);
@@ -102,20 +101,16 @@ test("earned scrap survives defeat and reload, while purchased stats apply once 
   assert.equal(next.runScrap, 0);
   assert.equal(next.defense.energy, 150);
 });
-test("all workshop bonuses apply to the next defense run without modifying survival", () => {
+test("all workshop bonuses apply to the next run", () => {
   const p = new ProgressionSystem();
   p.earn(1000);
   for (const id of Object.keys(WORKSHOP_UPGRADES)) assert.ok(p.buy(id));
-  const g = new CombatSystem({ mode: "defense", progression: p });
+  const g = new CombatSystem({ progression: p });
   g.start();
   assert.equal(g.stats.damage, 14 * 1.08);
   assert.equal(g.health, 110);
   assert.equal(g.stats.maxHealth, 110);
   assert.equal(g.stats.mortarCooldown, 4.5 * 0.95);
-  const survival = new CombatSystem({ progression: p });
-  survival.start();
-  assert.equal(survival.health, 100);
-  assert.equal(survival.stats.damage, 14);
 });
 function mapStorage(entries = {}, { failKey } = {}) {
   const data = new Map(Object.entries(entries));

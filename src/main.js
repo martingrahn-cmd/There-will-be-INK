@@ -34,7 +34,7 @@ const progression = new ProgressionSystem({
   getItem: (key) => localStorage.getItem(key),
   setItem: (key, value) => localStorage.setItem(key, value),
 });
-const game = new CombatSystem({ mode: "defense", progression }),
+const game = new CombatSystem({ progression }),
   audio = new AudioSystem();
 let view;
 try {
